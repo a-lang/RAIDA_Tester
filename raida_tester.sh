@@ -7,10 +7,10 @@
 testcoin="testcoin.stack"
 exit1="quit"
 exit2="25"
-COLOR_REST='\033[0m'
-COLOR_GREEN='\033[32m'
-COLOR_RED='\033[31m'
-COLOR_BOLD='\033[1m'
+_REST_='\033[0m'
+_GREEN_='\033[32m'
+_RED_='\033[31m'
+_BOLD_='\033[1m'
 CURL_CMD="curl"
 CURL_OPT="-qSfs"
 JQ_CMD="jq"
@@ -62,7 +62,7 @@ EOF
 
 Error(){
     message="$1"
-    message_color="$COLOR_RED$message$COLOR_REST"
+    message_color="$_RED_$message$_REST_"
     echo -e "$message_color\n"
 }
 
@@ -171,13 +171,13 @@ Echo()
             fi
 
             if [ "$status" == "ready" ];then
-                status_color="$COLOR_GREEN$status$COLOR_REST"
+                status_color="$_GREEN_$status$_REST_"
             else
-                status_color="$COLOR_RED$status$COLOR_REST"
+                status_color="$_RED_$status$_REST_"
             fi
 
             echo
-            echo -e "Status: $COLOR_BOLD$status_color"
+            echo -e "Status: $_BOLD_$status_color"
             echo "Milliseconds: $elapsed"
             echo "Request: $raida_url"
             echo "Response: $http_response"
@@ -226,13 +226,13 @@ Detect(){
             fi
 
             if [ "$status" == "pass" ];then
-                status_color="$COLOR_GREEN$status$COLOR_REST"
+                status_color="$_GREEN_$status$_REST_"
             else
-                status_color="$COLOR_RED$status$COLOR_REST"
+                status_color="$_RED_$status$_REST_"
             fi
             
             echo
-            echo -e "Status: $COLOR_BOLD$status_color"
+            echo -e "Status: $_BOLD_$status_color"
             echo "Milliseconds: $elapsed"
             echo "Request: $raida_url"
             echo "Response: $http_response"
@@ -282,13 +282,13 @@ Get_ticket(){
             fi
             
             if [ "$status" == "ticket" ];then
-                status_color="$COLOR_GREEN$status$COLOR_REST"
+                status_color="$_GREEN_$status$_REST_"
             else
-                status_color="$COLOR_RED$status$COLOR_REST"
+                status_color="$_RED_$status$_REST_"
             fi
             
             echo
-            echo -e "Status: $COLOR_BOLD$status_color"
+            echo -e "Status: $_BOLD_$status_color"
             echo "Milliseconds: $elapsed"
             echo "Request: $raida_url"
             echo "Response: $http_response"
@@ -343,14 +343,14 @@ Hints(){
                     _sn=$(echo $http_response | cut -d: -f1)
                     _ms=$(echo $http_response | cut -d: -f2)
                     status="Success, The serial number was $_sn and the ticket age was $_ms milliseconds old."
-                    status_color="$COLOR_GREEN$status$COLOR_REST"
+                    status_color="$_GREEN_$status$_REST_"
                 else
                     status="error"
-                    status_color="$COLOR_RED$status$COLOR_REST"
+                    status_color="$_RED_$status$_REST_"
                 fi
 
                 echo
-                echo -e "Status: $COLOR_BOLD$status_color"
+                echo -e "Status: $_BOLD_$status_color"
                 echo "Milliseconds: $elapsed"
                 echo "Request: $raida_url"
                 echo "Response: $http_response"
@@ -382,8 +382,8 @@ Check_ticket(){
             ticket=""
             echo "Last ticket is: empty"
             echo
-            echo -e "$COLOR_RED$string_01$COLOR_REST"
-            echo -e "Status: $COLOR_BOLD$COLOR_RED$status$COLOR_REST"
+            echo -e "$_RED_$string_01$_REST_"
+            echo -e "Status: $_BOLD_$_RED_$status$_REST_"
             echo "Request: $raida_url"
             echo "Response: $http_response"
             echo
@@ -396,7 +396,7 @@ Check_ticket(){
         fi
     else
         echo
-        echo -e "$COLOR_BOLD$COLOR_RED$string_05$COLOR_REST"
+        echo -e "$_BOLD_$_RED_$string_05$_REST_"
         echo "Request: $raida_url"
         echo
         return 1
