@@ -130,6 +130,23 @@ Timer(){
 	echo $seconds 
 }
 
+Get_denom(){
+    sn=$1
+    denom=0
+    if [ $sn -gt 0 -a $sn -lt 2097153 ];then
+        denom=1
+    elif [ $sn -lt 4194305 ];then
+        denom=5
+    elif [ $sn -lt 6291457 ];then
+        denom=25
+    elif [ $sn -lt 14680065 ];then
+        denom=100
+    elif [ $sn -lt 16777217 ];then
+        denom=250
+    fi
+    echo $denom
+}
+
 
 Echo()
 {
@@ -193,8 +210,9 @@ Detect(){
             string_an=`$JQ_CMD -r '.cloudcoin[].an[]' $testcoin`
             array_an=( $string_an )
             an="${array_an[$input]}"
+            denom=$(Get_denom $sn)
             
-            raida_url="$raida_url?nn=$nn&sn=$sn&an=$an&pan=$an&denomination=250"
+            raida_url="$raida_url?nn=$nn&sn=$sn&an=$an&pan=$an&denomination=$denom"
             start_s=$(Timer)
             http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
             http_retval=$?
@@ -248,8 +266,9 @@ Get_ticket(){
             string_an=`$JQ_CMD -r '.cloudcoin[].an[]' $testcoin`
             array_an=( $string_an )
             an="${array_an[$input]}"
+            denom=$(Get_denom $sn)
             
-            raida_url="$raida_url?nn=$nn&sn=$sn&an=$an&pan=$an&denomination=250"
+            raida_url="$raida_url?nn=$nn&sn=$sn&an=$an&pan=$an&denomination=$denom"
             start_s=$(Timer)
             http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
             http_retval=$?
@@ -302,8 +321,9 @@ Hints(){
             string_an=`$JQ_CMD -r '.cloudcoin[].an[]' $testcoin`
             array_an=( $string_an )
             an="${array_an[$input]}"
+            denom=$(Get_denom $sn)
             raida_url="https://$raida.cloudcoin.global/service/get_ticket"
-            raida_url="$raida_url?nn=$nn&sn=$sn&an=$an&pan=$an&denomination=250"
+            raida_url="$raida_url?nn=$nn&sn=$sn&an=$an&pan=$an&denomination=$denom"
 
             echo "$string_03"
             Check_ticket $raida_url
