@@ -5,7 +5,7 @@ The program is used to test CloudCoin RAIDA network, which is written in Bash.
 
 It's able to work on all Linux distro and Mac OS. 
 
-Demostration: https://asciinema.org/a/5fhs1e9volg8zkaf0l27ru4py
+Demonstration: https://asciinema.org/a/5fhs1e9volg8zkaf0l27ru4py
 
 ![image](https://raw.githubusercontent.com/a-lang/RAIDA_Tester/master/raida-tester_on_Mac.png)
 
