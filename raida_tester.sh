@@ -121,6 +121,15 @@ Check_requirement(){
     fi
 }
 
+Timer(){
+	if [ "$RUNNINGOS" == "Linux" ];then
+		seconds=`date +%s%N`
+	else
+		seconds=`ruby -e 'puts "%.9f" % Time.now' | tr -d '.'`
+	fi
+	echo $seconds 
+}
+
 
 Echo()
 {
@@ -132,10 +141,10 @@ Echo()
         if [ $input -ge 0 -a $input -lt 25  ];then
             raida="raida$input"
             raida_url="https://$raida.cloudcoin.global/service/echo"
-            start_s=`date +%s%N`
+            start_s=$(Timer)
             http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
             http_retval=$?
-            end_s=`date +%s%N`
+            end_s=$(Timer)
             elapsed=$(( (end_s-start_s)/1000000 ))
 
             if [ $http_retval -eq 0 ]; then
@@ -186,10 +195,10 @@ Detect(){
             an="${array_an[$input]}"
             
             raida_url="$raida_url?nn=$nn&sn=$sn&an=$an&pan=$an&denomination=250"
-            start_s=`date +%s%N`
+            start_s=$(Timer)
             http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
             http_retval=$?
-            end_s=`date +%s%N`
+            end_s=$(Timer)
             elapsed=$(( (end_s-start_s)/1000000 ))
 
             if [ $http_retval -eq 0 ]; then
@@ -241,10 +250,10 @@ Get_ticket(){
             an="${array_an[$input]}"
             
             raida_url="$raida_url?nn=$nn&sn=$sn&an=$an&pan=$an&denomination=250"
-            start_s=`date +%s%N`
+            start_s=$(Timer)
             http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
             http_retval=$?
-            end_s=`date +%s%N`
+            end_s=$(Timer)
             elapsed=$(( (end_s-start_s)/1000000 ))
 
             if [ $http_retval -eq 0 ]; then
@@ -304,10 +313,10 @@ Hints(){
                 echo "Last ticket is: $ticket"
                 raida_url="https://$raida.cloudcoin.global/service/hints"
                 raida_url="$raida_url?rn=$ticket"
-                start_s=`date +%s%N`
+                start_s=$(Timer)
                 http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
                 http_retval=$?
-                end_s=`date +%s%N`
+                end_s=$(Timer)
                 elapsed=$(( (end_s-start_s)/1000000 ))
 
                 if [ $http_retval -eq 0 ]; then
