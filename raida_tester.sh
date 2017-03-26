@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 # 
 # Created: 2017-3-20, A-Lang
-# Updated: 2017-3-21
 #
 
 # Variables
 testcoin="testcoin.stack"
 exit1="quit"
 exit2="25"
-COLOR_REST='\e[0m'
-COLOR_GREEN='\e[92m'
-COLOR_RED='\e[0;31m'
+COLOR_REST='\033[0m'
+COLOR_GREEN='\033[32m'
+COLOR_RED='\033[31m'
+COLOR_BOLD='\033[1m'
 CURL_CMD="curl"
 CURL_OPT="-qSfs"
 JQ_CMD="jq"
@@ -160,7 +160,7 @@ Echo()
             fi
 
             echo
-            echo -e "Status: $status_color"
+            echo -e "Status: $COLOR_BOLD$status_color"
             echo "Milliseconds: $elapsed"
             echo "Request: $raida_url"
             echo "Response: $http_response"
@@ -214,7 +214,7 @@ Detect(){
             fi
             
             echo
-            echo -e "Status: $status_color"
+            echo -e "Status: $COLOR_BOLD$status_color"
             echo "Milliseconds: $elapsed"
             echo "Request: $raida_url"
             echo "Response: $http_response"
@@ -269,7 +269,7 @@ Get_ticket(){
             fi
             
             echo
-            echo -e "Status: $status_color"
+            echo -e "Status: $COLOR_BOLD$status_color"
             echo "Milliseconds: $elapsed"
             echo "Request: $raida_url"
             echo "Response: $http_response"
@@ -330,7 +330,7 @@ Hints(){
                 fi
 
                 echo
-                echo -e "Status: $status_color"
+                echo -e "Status: $COLOR_BOLD$status_color"
                 echo "Milliseconds: $elapsed"
                 echo "Request: $raida_url"
                 echo "Response: $http_response"
@@ -363,7 +363,7 @@ Check_ticket(){
             echo "Last ticket is: empty"
             echo
             echo -e "$COLOR_RED$string_01$COLOR_REST"
-            echo -e "Status: $COLOR_RED$status$COLOR_REST"
+            echo -e "Status: $COLOR_BOLD$COLOR_RED$status$COLOR_REST"
             echo "Request: $raida_url"
             echo "Response: $http_response"
             echo
@@ -376,7 +376,7 @@ Check_ticket(){
         fi
     else
         echo
-        echo -e "$COLOR_RED$string_05$COLOR_REST"
+        echo -e "$COLOR_BOLD$COLOR_RED$string_05$COLOR_REST"
         echo "Request: $raida_url"
         echo
         return 1
