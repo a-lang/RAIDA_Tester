@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 
 # Created: 2017-3-20, A-Lang
-#
+# 
 
 # Variables
 testcoin="testcoin.stack"
@@ -122,7 +122,7 @@ Check_requirement(){
 }
 
 Timer(){
-	if [ "$RUNNINGOS" == "Linux" ];then
+	if [ "$RUNNINGOS" == "LINUX" ];then
 		seconds=`date +%s%N`
 	else
 		seconds=`ruby -e 'puts "%.9f" % Time.now' | tr -d '.'`
