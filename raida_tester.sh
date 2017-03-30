@@ -38,12 +38,14 @@ error_04="Error: Ticket Check Failed "
 Show_head(){
     clear
     cat <<EOF
-Welcome to RAIDA Tester. A CloudCoin Consortium Opensource.
-The Software is provided as is, with all faults, defects and errors, and 
-without warranty of any kind.
-You must have an authentic CloudCoin .stack file called 'testcoin.stack' 
-in the same folder as this program to run tests.
-The test coin will not be written to.
+#############################################################################
+# Welcome to RAIDA Tester. A CloudCoin Consortium Opensource.               #
+# The Software is provided as is, with all faults, defects and errors, and  #
+# without warranty of any kind.                                             #
+# You must have an authentic CloudCoin .stack file called 'testcoin.stack'  #
+# in the same folder as this program to run tests.                          #
+# The test coin will not be written to.                                     #
+#############################################################################
 EOF
 }
 
