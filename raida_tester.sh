@@ -34,9 +34,20 @@ error_03="Error: Test Coin File seems to be Wrong Format ($WORKDIR/$testcoin)"
 error_04="Error: Ticket Check Failed "
 
 
+Show_logo(){
+    printf  '
+              ________                ________      _
+             / ____/ /___  __  ______/ / ____/___  (_)___
+            / /   / / __ \/ / / / __  / /   / __ \/ / __ \
+           / /___/ / /_/ / /_/ / /_/ / /___/ /_/ / / / / /
+           \____/_/\____/\__,_/\__,_/\____/\____/_/_/ /_/
+
+'
+}
 
 Show_head(){
     clear
+    Show_logo
     cat <<EOF
 #############################################################################
 # Welcome to RAIDA Tester. A CloudCoin Consortium Opensource.               #
@@ -51,7 +62,7 @@ EOF
 
 Show_menu(){
     cat <<EOF
-=========================================
+===================================
 RAIDA Tester Commands Available:
 [+] echo       (e)
 [+] detect     (d)
