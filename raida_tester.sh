@@ -5,8 +5,7 @@
 
 # Variables
 testcoin="testcoin.stack"
-exit1="quit"
-exit2="25"
+raida_nums=25
 _REST_='\033[0m'
 _GREEN_='\033[32m'
 _RED_='\033[31m'
@@ -32,6 +31,9 @@ error_01="Error: Test Coin File Not Found ($WORKDIR/$testcoin)"
 error_02="Error: Invalid Command"
 error_03="Error: Test Coin File seems to be Wrong Format ($WORKDIR/$testcoin)"
 error_04="Error: Ticket Check Failed "
+error_05="Error: Test failed, run the echo to see more details."
+error_06="Error: Test failed, run the detect to see more details."
+error_07="Error: Test failed, run the get_ticket to see more details."
 
 
 Show_logo(){
@@ -96,22 +98,22 @@ EOF
 Main()
 {
     input=""
-    while [ "$input" != "exit" ]
+    while [ "$input" != "quit" ]
     do
         Show_menu
 
         echo -n "RAIDA Tester> " && read input
         if [ "$input" == "echo" -o "$input" == "e" ];then
-            Echo
+            Process_request _echo
 
         elif [ "$input" == "detect" -o "$input" == "d" ];then
-            Detect
+            Process_request _detect
 
         elif [ "$input" == "get_ticket" -o "$input" == "g" ];then
-            Get_ticket
+            Process_request _get_ticket
 
         elif [ "$input" == "hints" -o "$input" == "h" ];then
-            Hints
+            Process_request _hints
 
         elif [ "$input" == "quit" -o "$input" == "q" ];then
             break
@@ -161,236 +163,292 @@ Get_denom(){
 }
 
 
-Echo()
+Process_request(){
+    input=""
+    option="$1"
+
+    case "$option" in
+        _echo)
+        PROMPT="ECHO"
+        ;;
+        _detect)
+        PROMPT="DETECT"
+        ;;
+        _get_ticket)
+        PROMPT="GET_TICKET"
+        ;;
+        _hints)
+        PROMPT="HINTS"
+        ;;
+        *)
+        PROMPT="XXX"
+        ;;
+    esac
+
+    while [ "$input" != "$raida_nums" ]
+    do
+        echo "What RAIDA# do you want to test $PROMPT? Enter 25 to end."
+        echo -n "$PROMPT> " && read input
+        if [ $input -ge 0 -a $input -lt 25  ];then
+            $option $input
+
+        elif [ "$input" = "$raida_nums" ];then
+            break
+
+        else
+            Error "$error_02"
+
+        fi
+    done
+}
+
+_echo()
 {
-    input=""
-    while [ "$input" != "$exit2" ]
-    do
-        echo "What RAIDA# do you want to test echo? Enter 25 to end."
-        echo -n "echo> " && read input
-        if [ $input -ge 0 -a $input -lt 25  ];then
-            raida="raida$input"
-            raida_url="https://$raida.cloudcoin.global/service/echo"
-            start_s=$(Timer)
-            http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
-            http_retval=$?
-            end_s=$(Timer)
-            elapsed=$(( (end_s-start_s)/1000000 ))
+    echo_retval=0
+    input="$1"
+    raida="raida$input"
+    raida_url="https://$raida.cloudcoin.global/service/echo"
+    start_s=$(Timer)
+    http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
+    http_retval=$?
+    end_s=$(Timer)
+    elapsed=$(( (end_s-start_s)/1000000 ))
 
-            if [ $http_retval -eq 0 ]; then
-                status=$(echo $http_response | $JQ_CMD -r '.status')
-            else
-                status="error"
-            fi
+    if [ $http_retval -eq 0 ]; then
+        status=$(echo $http_response | $JQ_CMD -r '.status')
+    else
+        status="error"
+        echo_retval=1
+    fi
 
-            if [ "$status" == "ready" ];then
-                status_color="$_GREEN_$status$_REST_"
-                response_color="$_GREEN_$http_response$_REST_"
-            else
-                status_color="$_RED_$status$_REST_"
-                response_color="$_RED_$http_response$_REST_"
-            fi
+    if [ "$status" == "ready" ];then
+        status_color="$_GREEN_$status$_REST_"
+        response_color="$_GREEN_$http_response$_REST_"
+    else
+        status_color="$_RED_$status$_REST_"
+        response_color="$_RED_$http_response$_REST_"
+        echo_retval=1
+    fi
 
-            echo
-            echo -e "Status: $_BOLD_$status_color"
-            echo "Milliseconds: $elapsed"
-            echo "Request: $raida_url"
-            echo -e "Response: $response_color"
-            echo
-
-        elif [ "$input" = "$exit2" ];then
-            break
-
-        else
-            Error "$error_02"
-        fi
-    done
+    echo
+    echo -e "Status: $_BOLD_$status_color"
+    echo "Milliseconds: $elapsed"
+    echo "Request: $raida_url"
+    echo -e "Response: $response_color"
+    echo
+    return $echo_retval
 }
 
-Detect(){
+
+_detect(){
+    # Check the local testcoin file
     Load_testcoin
     is_testcoin=$?
     [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
 
-    input=""
-    while [ "$input" != "$exit2" ]
-    do
-        echo "What RAIDA# do you want to test detect? Enter 25 to end."
-        echo -n "detect> " && read input
-        if [ $input -ge 0 -a $input -lt 25  ];then
-            raida="raida$input"
-            raida_url="https://$raida.cloudcoin.global/service/detect"
-            nn=`$JQ_CMD '.cloudcoin[].nn' $testcoin | tr -d '"'`
-            sn=`$JQ_CMD '.cloudcoin[].sn' $testcoin | tr -d '"'`
-            string_an=`$JQ_CMD -r '.cloudcoin[].an[]' $testcoin`
-            array_an=( $string_an )
-            an="${array_an[$input]}"
-            denom=$(Get_denom $sn)
+    input="$1"
+    raida="raida$input"
+    raida_url="https://$raida.cloudcoin.global/service/detect"
+    nn=`$JQ_CMD '.cloudcoin[].nn' $testcoin | tr -d '"'`
+    sn=`$JQ_CMD '.cloudcoin[].sn' $testcoin | tr -d '"'`
+    string_an=`$JQ_CMD -r '.cloudcoin[].an[]' $testcoin`
+    array_an=( $string_an )
+    an="${array_an[$input]}"
+    denom=$(Get_denom $sn)
+
+    # Test the Echo
+    test_echo=$(_echo $input)
+    run_echo=$?
+    if [ $run_echo -eq 1 ];then
+        Error "$error_05"
+        return 1
+    fi 
             
-            raida_url="$raida_url?nn=$nn&sn=$sn&an=$an&pan=$an&denomination=$denom"
-            start_s=$(Timer)
-            http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
-            http_retval=$?
-            end_s=$(Timer)
-            elapsed=$(( (end_s-start_s)/1000000 ))
+    detect_retval=0
+    raida_url="$raida_url?nn=$nn&sn=$sn&an=$an&pan=$an&denomination=$denom"
+    start_s=$(Timer)
+    http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
+    http_retval=$?
+    end_s=$(Timer)
+    elapsed=$(( (end_s-start_s)/1000000 ))
 
-            if [ $http_retval -eq 0 ]; then
-                status=$(echo $http_response | $JQ_CMD -r '.status')
-            else
-                status="error"
-            fi
+    if [ $http_retval -eq 0 ]; then
+        status=$(echo $http_response | $JQ_CMD -r '.status')
+    else
+        status="error"
+        detect_retval=1
+    fi
 
-            if [ "$status" == "pass" ];then
-                status_color="$_GREEN_$status$_REST_"
-                response_color="$_GREEN_$http_response$_REST_"
-            else
-                status_color="$_RED_$status$_REST_"
-                response_color="$_RED_$http_response$_REST_"
-            fi
+    if [ "$status" == "pass" ];then
+        status_color="$_GREEN_$status$_REST_"
+        response_color="$_GREEN_$http_response$_REST_"
+    else
+        status_color="$_RED_$status$_REST_"
+        response_color="$_RED_$http_response$_REST_"
+        detect_retval=1
+    fi
             
-            echo
-            echo -e "Status: $_BOLD_$status_color"
-            echo "Milliseconds: $elapsed"
-            echo "Request: $raida_url"
-            echo -e "Response: $response_color"
-            echo
+    echo
+    echo -e "Status: $_BOLD_$status_color"
+    echo "Milliseconds: $elapsed"
+    echo "Request: $raida_url"
+    echo -e "Response: $response_color"
+    echo
+    return $detect_retval
 
-        elif [ "$input" = "$exit2" ];then
-            break
-
-        else
-            Error "$error_02"
-
-        fi
-    done
 }
 
-Get_ticket(){
+
+_get_ticket(){
+    # Check the local testcoin file
     Load_testcoin
     is_testcoin=$?
     [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
 
-    input=""
-    while [ "$input" != "$exit2" ]
-    do
-        echo "What RAIDA# do you want to get ticket for? Enter 25 to end."
-        echo -n "detect> " && read input
-        if [ $input -ge 0 -a $input -lt 25  ];then
-            raida="raida$input"
-            raida_url="https://$raida.cloudcoin.global/service/get_ticket"
-            nn=`$JQ_CMD '.cloudcoin[].nn' $testcoin | tr -d '"'`
-            sn=`$JQ_CMD '.cloudcoin[].sn' $testcoin | tr -d '"'`
-            string_an=`$JQ_CMD -r '.cloudcoin[].an[]' $testcoin`
-            array_an=( $string_an )
-            an="${array_an[$input]}"
-            denom=$(Get_denom $sn)
-            
-            raida_url="$raida_url?nn=$nn&sn=$sn&an=$an&pan=$an&denomination=$denom"
-            start_s=$(Timer)
-            http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
-            http_retval=$?
-            end_s=$(Timer)
-            elapsed=$(( (end_s-start_s)/1000000 ))
+    input="$1"
+    raida="raida$input"
+    raida_url="https://$raida.cloudcoin.global/service/get_ticket"
+    nn=`$JQ_CMD '.cloudcoin[].nn' $testcoin | tr -d '"'`
+    sn=`$JQ_CMD '.cloudcoin[].sn' $testcoin | tr -d '"'`
+    string_an=`$JQ_CMD -r '.cloudcoin[].an[]' $testcoin`
+    array_an=( $string_an )
+    an="${array_an[$input]}"
+    denom=$(Get_denom $sn)
 
-            if [ $http_retval -eq 0 ]; then
-                status=$(echo $http_response | $JQ_CMD -r '.status')
-            else
-                status="error"
-            fi
-            
-            if [ "$status" == "ticket" ];then
-                status_color="$_GREEN_$status$_REST_"
-                response_color="$_GREEN_$http_response$_REST_"
-            else
-                status_color="$_RED_$status$_REST_"
-                response_color="$_RED_$http_response$_REST_"
-            fi
-            
-            echo
-            echo -e "Status: $_BOLD_$status_color"
-            echo "Milliseconds: $elapsed"
-            echo "Request: $raida_url"
-            echo -e "Response: $response_color"
-            echo
+    # Test the Echo
+    test_echo=$(_echo $input)
+    run_echo=$?
+    if [ $run_echo -eq 1 ];then
+        Error "$error_05"
+        return 1
+    fi 
 
-        elif [ "$input" = "$exit2" ];then
-            break
+    # Test the Detect
+    test_detect=$(_detect $input)
+    run_detect=$?
+    if [ $run_detect -eq 1 ];then
+        Error "$error_06"
+        return 1
+    fi 
+    
+    get_ticket_retval=0        
+    raida_url="$raida_url?nn=$nn&sn=$sn&an=$an&pan=$an&denomination=$denom"
+    start_s=$(Timer)
+    http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
+    http_retval=$?
+    end_s=$(Timer)
+    elapsed=$(( (end_s-start_s)/1000000 ))
 
-        else
-            Error "$error_02"
+    if [ $http_retval -eq 0 ]; then
+        status=$(echo $http_response | $JQ_CMD -r '.status')
+    else
+        status="error"
+        get_ticket_retval=1
+    fi
             
-        fi
-    done
+    if [ "$status" == "ticket" ];then
+        status_color="$_GREEN_$status$_REST_"
+        response_color="$_GREEN_$http_response$_REST_"
+    else
+        status_color="$_RED_$status$_REST_"
+        response_color="$_RED_$http_response$_REST_"
+        get_ticket_retval=1
+    fi
+            
+    echo
+    echo -e "Status: $_BOLD_$status_color"
+    echo "Milliseconds: $elapsed"
+    echo "Request: $raida_url"
+    echo -e "Response: $response_color"
+    echo
+    return $get_ticket_retval
+
 }
 
-Hints(){
+
+_hints(){
     Load_testcoin
     is_testcoin=$?
     [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
 
-    input=""
-    while [ "$input" != "$exit2" ]
-    do
-        echo "What RAIDA# do you want to test hints? Enter 25 to end."
-        echo -n "test hints> " && read input
-        if [ $input -ge 0 -a $input -lt 25  ];then
-            raida="raida$input"
-            nn=`$JQ_CMD '.cloudcoin[].nn' $testcoin | tr -d '"'`
-            sn=`$JQ_CMD '.cloudcoin[].sn' $testcoin | tr -d '"'`
-            string_an=`$JQ_CMD -r '.cloudcoin[].an[]' $testcoin`
-            array_an=( $string_an )
-            an="${array_an[$input]}"
-            denom=$(Get_denom $sn)
-            raida_url="https://$raida.cloudcoin.global/service/get_ticket"
-            raida_url="$raida_url?nn=$nn&sn=$sn&an=$an&pan=$an&denomination=$denom"
+    input="$1"
+    raida="raida$input"
+    nn=`$JQ_CMD '.cloudcoin[].nn' $testcoin | tr -d '"'`
+    sn=`$JQ_CMD '.cloudcoin[].sn' $testcoin | tr -d '"'`
+    string_an=`$JQ_CMD -r '.cloudcoin[].an[]' $testcoin`
+    array_an=( $string_an )
+    an="${array_an[$input]}"
+    denom=$(Get_denom $sn)
+    raida_url="https://$raida.cloudcoin.global/service/get_ticket"
+    raida_url="$raida_url?nn=$nn&sn=$sn&an=$an&pan=$an&denomination=$denom"
 
-            echo "$string_03"
-            Check_ticket $raida_url
-            Check_ticket_retval=$?
+    # Test the Echo
+    test_echo=$(_echo $input)
+    run_echo=$?
+    if [ $run_echo -eq 1 ];then
+        Error "$error_05"
+        return 1
+    fi 
+
+    # Test the Detect
+    test_detect=$(_detect $input)
+    run_detect=$?
+    if [ $run_detect -eq 1 ];then
+        Error "$error_06"
+        return 1
+    fi 
+
+    # Test the Get_ticket
+    test_get_ticket=$(_get_ticket $input)
+    run_get_ticket=$?
+    if [ $run_get_ticket -eq 1 ];then
+        Error "$error_07"
+        return 1
+    fi 
+
+    echo "$string_03"
+    Obtain_ticket $raida_url
+    Obtain_ticket_retval=$?
+    hints_retval=0
             
-            if [ $Check_ticket_retval -eq 0 ]; then
-                echo "Last ticket is: $ticket"
-                raida_url="https://$raida.cloudcoin.global/service/hints"
-                raida_url="$raida_url?rn=$ticket"
-                start_s=$(Timer)
-                http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
-                http_retval=$?
-                end_s=$(Timer)
-                elapsed=$(( (end_s-start_s)/1000000 ))
+    if [ $Obtain_ticket_retval -eq 0 ]; then
+        echo "Last ticket is: $ticket"
+        raida_url="https://$raida.cloudcoin.global/service/hints"
+        raida_url="$raida_url?rn=$ticket"
+        start_s=$(Timer)
+        http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
+        http_retval=$?
+        end_s=$(Timer)
+        elapsed=$(( (end_s-start_s)/1000000 ))
 
-                if [ $http_retval -eq 0 ]; then
-                    _sn=$(echo $http_response | cut -d: -f1)
-                    _ms=$(echo $http_response | cut -d: -f2)
-                    status="Success, The serial number was $_sn and the ticket age was $_ms milliseconds old."
-                    status_color="$_GREEN_$status$_REST_"
-                    response_color="$_GREEN_$http_response$_REST_"
-                else
-                    status="error"
-                    status_color="$_RED_$status$_REST_"
-                    response_color="$_RED_$http_response$_REST_"
-                fi
-
-                echo
-                echo -e "Status: $_BOLD_$status_color"
-                echo "Milliseconds: $elapsed"
-                echo "Request: $raida_url"
-                echo -e "Response: $response_color"
-                echo
-
-            fi
-
-        elif [ "$input" = "$exit2" ];then
-            break
-
+        if [ $http_retval -eq 0 ]; then
+            _sn=$(echo $http_response | cut -d: -f1)
+            _ms=$(echo $http_response | cut -d: -f2)
+            status="Success, The serial number was $_sn and the ticket age was $_ms milliseconds old."
+            status_color="$_GREEN_$status$_REST_"
+            response_color="$_GREEN_$http_response$_REST_"
         else
-            Error "$error_02"
-            
+            status="error"
+            status_color="$_RED_$status$_REST_"
+            response_color="$_RED_$http_response$_REST_"
+            hints_retval=1
         fi
-    done
+
+        echo
+        echo -e "Status: $_BOLD_$status_color"
+        echo "Milliseconds: $elapsed"
+        echo "Request: $raida_url"
+        echo -e "Response: $response_color"
+        echo
+
+    else
+        hints_retval=1
+    fi
+
+    return $hints_retval
 }
 
-
-Check_ticket(){
+Obtain_ticket(){
     raida_url="$1"
     http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
     is_raida=$(echo $http_response | grep -c "server")
