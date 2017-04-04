@@ -185,15 +185,17 @@ Echo()
 
             if [ "$status" == "ready" ];then
                 status_color="$_GREEN_$status$_REST_"
+                response_color="$_GREEN_$http_response$_REST_"
             else
                 status_color="$_RED_$status$_REST_"
+                response_color="$_RED_$http_response$_REST_"
             fi
 
             echo
             echo -e "Status: $_BOLD_$status_color"
             echo "Milliseconds: $elapsed"
             echo "Request: $raida_url"
-            echo "Response: $http_response"
+            echo -e "Response: $response_color"
             echo
 
         elif [ "$input" = "$exit2" ];then
@@ -240,15 +242,17 @@ Detect(){
 
             if [ "$status" == "pass" ];then
                 status_color="$_GREEN_$status$_REST_"
+                response_color="$_GREEN_$http_response$_REST_"
             else
                 status_color="$_RED_$status$_REST_"
+                response_color="$_RED_$http_response$_REST_"
             fi
             
             echo
             echo -e "Status: $_BOLD_$status_color"
             echo "Milliseconds: $elapsed"
             echo "Request: $raida_url"
-            echo "Response: $http_response"
+            echo -e "Response: $response_color"
             echo
 
         elif [ "$input" = "$exit2" ];then
@@ -296,15 +300,17 @@ Get_ticket(){
             
             if [ "$status" == "ticket" ];then
                 status_color="$_GREEN_$status$_REST_"
+                response_color="$_GREEN_$http_response$_REST_"
             else
                 status_color="$_RED_$status$_REST_"
+                response_color="$_RED_$http_response$_REST_"
             fi
             
             echo
             echo -e "Status: $_BOLD_$status_color"
             echo "Milliseconds: $elapsed"
             echo "Request: $raida_url"
-            echo "Response: $http_response"
+            echo -e "Response: $response_color"
             echo
 
         elif [ "$input" = "$exit2" ];then
@@ -357,16 +363,18 @@ Hints(){
                     _ms=$(echo $http_response | cut -d: -f2)
                     status="Success, The serial number was $_sn and the ticket age was $_ms milliseconds old."
                     status_color="$_GREEN_$status$_REST_"
+                    response_color="$_GREEN_$http_response$_REST_"
                 else
                     status="error"
                     status_color="$_RED_$status$_REST_"
+                    response_color="$_RED_$http_response$_REST_"
                 fi
 
                 echo
                 echo -e "Status: $_BOLD_$status_color"
                 echo "Milliseconds: $elapsed"
                 echo "Request: $raida_url"
-                echo "Response: $http_response"
+                echo -e "Response: $response_color"
                 echo
 
             fi
