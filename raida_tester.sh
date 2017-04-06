@@ -70,6 +70,7 @@ RAIDA Tester Commands Available:
 [+] detect     (d)
 [+] get_ticket (g)
 [+] hints      (h)
+[+] fix        (f)
 [+] quit       (q)
 EOF
 
@@ -114,6 +115,9 @@ Main()
 
         elif [ "$input" == "hints" -o "$input" == "h" ];then
             Process_request _hints
+
+        elif [ "$input" == "fix" -o "$input" == "f" ];then
+            Process_request _fix
 
         elif [ "$input" == "quit" -o "$input" == "q" ];then
             break
@@ -179,6 +183,9 @@ Process_request(){
         ;;
         _hints)
         PROMPT="HINTS"
+        ;;
+        _fix)
+        PROMPT="FIX"
         ;;
         *)
         PROMPT="XXX"
@@ -407,11 +414,11 @@ _hints(){
     fi 
 
     echo "$string_03"
-    Obtain_ticket $raida_url
-    Obtain_ticket_retval=$?
+    Hints_ticket_request $raida_url
+    Hints_ticket_retval=$?
     hints_retval=0
             
-    if [ $Obtain_ticket_retval -eq 0 ]; then
+    if [ $Hints_ticket_retval -eq 0 ]; then
         echo "Last ticket is: $ticket"
         raida_url="https://$raida.cloudcoin.global/service/hints"
         raida_url="$raida_url?rn=$ticket"
@@ -448,7 +455,140 @@ _hints(){
     return $hints_retval
 }
 
-Obtain_ticket(){
+_fix(){
+    Load_testcoin
+    is_testcoin=$?
+    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+
+    fixed_server=$1
+    nn=`$JQ_CMD '.cloudcoin[].nn' $testcoin | tr -d '"'`
+    sn=`$JQ_CMD '.cloudcoin[].sn' $testcoin | tr -d '"'`
+    string_an=`$JQ_CMD -r '.cloudcoin[].an[]' $testcoin`
+    array_an=( $string_an )
+    denom=$(Get_denom $sn)
+     
+    #declare -a array_fix_corner1
+    #declare -a array_fix_corner2
+    #declare -a array_fix_corner3
+    #declare -a array_fix_corner4
+    #declare -a array_trusted_servers
+    #declare -a fromserver
+    #declare -a message
+    #declare -a get_ticket_status
+
+    array_fix_corner1[1]=$(( fixed_server - 1))
+    array_fix_corner1[2]=$(( fixed_server - 5))
+    array_fix_corner1[3]=$(( fixed_server - 6))
+    array_fix_corner2[1]=$(( fixed_server + 1))
+    array_fix_corner2[2]=$(( fixed_server - 4))
+    array_fix_corner2[3]=$(( fixed_server - 5))
+    array_fix_corner3[1]=$(( fixed_server - 1))
+    array_fix_corner3[2]=$(( fixed_server + 4))
+    array_fix_corner3[3]=$(( fixed_server + 5))
+    array_fix_corner4[1]=$(( fixed_server + 1))
+    array_fix_corner4[2]=$(( fixed_server + 5))
+    array_fix_corner4[3]=$(( fixed_server + 6))
+
+    for ((i=1;i<=4;i++))
+    do
+        array_name="array_fix_corner$i"
+        n=1
+        for j in $(eval echo \${$array_name[@]})
+        do
+            if [ $j -lt 0 ];then
+                eval $array_name[$n]=$(( $j + 25))
+            elif [ $j -gt 24 ];then
+                eval $array_name[$n]=$(( $j - 25))
+            fi
+            ((n++))
+        done
+    done
+
+    input=""
+    while true
+    do
+        echo "What RAIDA triad do you want to use? 1.Upper-Left, 2.Upper-Right, 3.Lower-Left, 4.Lower-Right"
+        read input
+        if [ $input -gt 0 -a $input -lt 5  ];then
+            array_name="array_fix_corner$input"
+            array_trusted_servers=$(eval echo \${$array_name[@]})
+            n=1
+            Fix_ticket_retval=0
+
+            for i in ${array_trusted_servers[@]}
+            do
+                raida="raida$i"
+                an="${array_an[$i]}"
+                raida_url="https://$raida.cloudcoin.global/service/get_ticket"
+                raida_url="$raida_url?nn=$nn&sn=$sn&toserver=$fixed_server&an=$an&pan=$an&denomination=$denom"
+                
+                Fix_ticket_request $raida_url
+                retval=$?
+
+                if [ $retval -eq 0 ];then
+                    fromserver[$n]="$i"
+                    message[$n]="$ticket"
+                    get_ticket_status[$n]="$status"
+                else
+                    get_ticket_status[$n]="empty"
+                    Fix_ticket_retval=1   
+                fi
+
+                ((n++))
+            done
+            
+            if [ $Fix_ticket_retval -eq 0 ]; then
+                raida="raida$fixed_server"
+                an="${array_an[$fixed_server]}"
+                raida_url="https://$raida.cloudcoin.global/service/fix"
+                raida_url="$raida_url?fromserver1=${fromserver[1]}&message1=${message[1]}&fromserver2=${fromserver[2]}&message2=${message[2]}&fromserver3=${fromserver[3]}&message3=${message[3]}&pan=$an"
+                start_s=$(Timer)
+                http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
+                http_retval=$?
+                end_s=$(Timer)
+                elapsed=$(( (end_s-start_s)/1000000 ))
+
+                if [ $http_retval -eq 0 ]; then
+                    status=$(echo $http_response | $JQ_CMD -r '.status')
+                else
+                    status="error"
+                    fix_retval=1
+                fi
+
+                if [ $status == "success" ];then
+                    echo
+                    echo -e "Status: $_BOLD_$_GREEN_$status$_REST_"
+                    echo "Request: $raida_url"
+                    echo -e "Response: $_GREEN_$http_response$_REST_"
+                    echo
+
+                else
+                    echo
+                    echo -e "Status: $_BOLD_$_RED_$status$_REST_"
+                    echo "Request: $raida_url"
+                    echo -e "Response: $_RED_$http_response$_REST_"
+                    echo
+                fi
+            else
+                echo
+                echo "Ticket Status Results: ${get_ticket_status[@]}"
+                echo -e "${_RED_}Trusted Servers failed to vouch for RAIDA$fixed_server. Fix may still work with another triad of trusted servers.${_REST_}"
+                echo
+
+            fi
+
+            break
+
+        else
+            Error "$error_02"
+
+        fi
+    done
+
+}
+
+
+Hints_ticket_request(){
     raida_url="$1"
     http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
     is_raida=$(echo $http_response | grep -c "server")
@@ -483,6 +623,40 @@ Obtain_ticket(){
     fi
 }
 
+Fix_ticket_request(){
+    raida_url="$1"
+    http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
+    is_raida=$(echo $http_response | grep -c "server")
+    ticket=""
+
+    if [ "$is_raida" == "1" ];then
+        message="$(echo $http_response | $JQ_CMD -r '.message')"
+        status="$(echo $http_response | $JQ_CMD -r '.status')"
+
+        if [ $status != "ticket" ];then
+            echo
+            echo $raida_url
+            echo
+            echo -e "$_RED_$http_response$_REST_"
+            return 1
+
+        else
+            echo
+            echo $raida_url
+            echo
+            echo -e "$_GREEN_$http_response$_REST_"
+            ticket="$message"
+            return 0
+
+        fi
+    else
+        echo
+        echo -e "$_BOLD_$_RED_$string_05$_REST_"
+        echo "Request: $raida_url"
+        return 1
+
+    fi
+}
 
 Load_testcoin(){
     if [ -f $testcoin ];then
