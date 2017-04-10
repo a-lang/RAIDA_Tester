@@ -13,6 +13,7 @@ _BOLD_='\033[1m'
 CURL_CMD="curl"
 CURL_OPT="-qSfs -m 60"
 JQ_CMD="jq"
+HTML_DIR="html"
 
 
 # Don't change the following lines
@@ -27,6 +28,7 @@ string_02="Loading test coin: $WORKDIR/$testcoin"
 string_03="Checking ticket..."
 string_04="Empty ticket"
 string_05="HTTPS Access No Response"
+string_06="Would you like to generate a html report for test results? (y/N)"
 error_01="Error: Testcoin File Not Found ($WORKDIR/$testcoin)"
 error_02="Error: Invalid Command"
 error_03="Error: Test Coin File seems to be Wrong Format ($WORKDIR/$testcoin)"
@@ -250,17 +252,34 @@ Process_request(){
 }
 
 _all_echo(){
+    local n
+
+    ask_html "ECHO"
+    retval=$?
+    [ $retval -eq 1 ] && return 1 # html template file not found
+
     echo -n "ECHO Results: "
     for ((n=0;n<$raida_nums;n++))
     do
         _echo $n >/dev/null 2>&1
         run_echo=$?
         if [ $run_echo -eq 0 ];then
-            status="pass"
+            result="pass"
         else
-            status="${_RED_}fail${_REST_}"
+            result="${_RED_}fail${_REST_}"
         fi 
-        echo -e -n "-> RAIDA#${n}: ${status}(${elapsed}ms)  "
+        echo -e -n "-> RAIDA#${n}: ${result}(${elapsed}ms)  "
+
+        if [ "$save_to_html" == "YES" ];then
+            html_report="echotest.html"
+            raida_node=$n
+            get_status="$status"
+            get_request="$raida_url"
+            get_response="$http_response"
+            get_ms="$elapsed"
+
+            Basic_htmlreport "$html_report" "$raida_node" "$get_status" "$get_request" "$get_response" "$get_ms"
+        fi
     done
     echo;echo
 }
@@ -303,10 +322,16 @@ _echo()
 }
 
 _all_detect(){
+    local n
+
     # Check the local testcoin file
     Load_testcoin
     is_testcoin=$?
     [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+
+    ask_html "DETECT"
+    retval=$?
+    [ $retval -eq 1 ] && return 1 # html template file not found
 
     echo -n "DETECT Results: "
     for ((n=0;n<$raida_nums;n++))
@@ -314,11 +339,22 @@ _all_detect(){
         _detect $n >/dev/null 2>&1
         run_detect=$?
         if [ $run_detect -eq 0 ];then
-            status="pass"
+            result="pass"
         else
-            status="${_RED_}fail${_REST_}"
+            result="${_RED_}fail${_REST_}"
         fi 
-        echo -e -n "-> RAIDA#${n}: ${status}(${elapsed}ms)  "
+        echo -e -n "-> RAIDA#${n}: ${result}(${elapsed}ms)  "
+
+        if [ "$save_to_html" == "YES" ];then
+            html_report="detecttest.html"
+            raida_node=$n
+            get_status="$status"
+            get_request="$raida_url"
+            get_response="$http_response"
+            get_ms="$elapsed"
+
+            Basic_htmlreport "$html_report" "$raida_node" "$get_status" "$get_request" "$get_response" "$get_ms"
+        fi
     done
     echo;echo
 }
@@ -382,10 +418,16 @@ _detect(){
 }
 
 _all_ticket(){
+    local n
+
     # Check the local testcoin file
     Load_testcoin
     is_testcoin=$?
     [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+
+    ask_html "TICKET"
+    retval=$?
+    [ $retval -eq 1 ] && return 1 # html template file not found
 
     echo -n "TICKET Results: "
     for ((n=0;n<$raida_nums;n++))
@@ -393,11 +435,23 @@ _all_ticket(){
         _get_ticket $n >/dev/null 2>&1
         run_ticket=$?
         if [ $run_ticket -eq 0 ];then
-            status="pass"
+            result="pass"
         else
-            status="${_RED_}fail${_REST_}"
+            result="${_RED_}fail${_REST_}"
         fi 
-        echo -e -n "-> RAIDA#${n}: ${status}(${elapsed}ms)  "
+        echo -e -n "-> RAIDA#${n}: ${result}(${elapsed}ms)  "
+
+        if [ "$save_to_html" == "YES" ];then
+            html_report="tickettest.html"
+            raida_node=$n
+            get_status="$status"
+            get_request="$raida_url"
+            get_response="$http_response"
+            get_ms="$elapsed"
+
+            Basic_htmlreport "$html_report" "$raida_node" "$get_status" "$get_request" "$get_response" "$get_ms"
+        fi
+
     done
     echo;echo
 
@@ -470,10 +524,16 @@ _get_ticket(){
 }
 
 _all_hints(){
+    local n
+
     # Check the local testcoin file
     Load_testcoin
     is_testcoin=$?
     [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+
+    ask_html "HINTS"
+    retval=$?
+    [ $retval -eq 1 ] && return 1 # html template file not found
 
     echo -n "HINTS Results: "
     for ((n=0;n<$raida_nums;n++))
@@ -481,11 +541,23 @@ _all_hints(){
         _hints $n > /dev/null 2>&1
         run_hints=$?
         if [ $run_hints -eq 0 ];then
-            status="pass"
+            result="pass"
         else
-            status="${_RED_}fail${_REST_}"
+            result="${_RED_}fail${_REST_}"
         fi 
-        echo -e -n "-> RAIDA#${n}: ${status}(${elapsed}ms)  "
+        echo -e -n "-> RAIDA#${n}: ${result}(${elapsed}ms)  "
+
+        if [ "$save_to_html" == "YES" ];then
+            html_report="hintstest.html"
+            raida_node=$n
+            get_status="$status"
+            get_request="$raida_url"
+            get_response="$http_response"
+            get_ms="$elapsed"
+
+            Basic_htmlreport "$html_report" "$raida_node" "$get_status" "$get_request" "$get_response" "$get_ms"
+        fi  
+
     done
     echo;echo
 
@@ -574,14 +646,17 @@ _hints(){
 }
 
 _all_fix(){
-    local i
-    local j
     local n
+    local retval
     
     # Check the local testcoin file
     Load_testcoin
     is_testcoin=$?
     [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+
+    ask_html "FIX"
+    retval=$?
+    [ $retval -eq 1 ] && return 1 # html template file not found
 
     echo
     echo "FIX Results [Fix1,Fix2,Fix3,Fix4]: "
@@ -596,6 +671,12 @@ _all_fix(){
 }
 
 _fix(){
+    local i
+    local j
+    local n
+    local input
+    local retval
+
     Load_testcoin
     is_testcoin=$?
     [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
@@ -725,6 +806,14 @@ _fix_all_corners(){
     local i
     local j
     local n
+    local retval
+    local fix_retval
+    local html_report
+    local raida_node
+    local get_status
+    local get_request
+    local get_response
+    local get_ms
 
     fixed_server=$1
     nn=`$JQ_CMD '.cloudcoin[].nn' $testcoin | tr -d '"'`
@@ -825,6 +914,18 @@ _fix_all_corners(){
         else
             [ $c -eq 4 ] && echo -e "${_RED_}fail${_REST_}" || echo -e -n "${_RED_}fail${_REST_}, "
         fi
+
+        if [ "$save_to_html" == "YES" ];then
+            html_report="fix${c}test.html"
+            raida_node=$fixed_server
+            get_status="$status"
+            get_request="$raida_url"
+            get_response="$http_response"
+            get_ms="$elapsed"
+
+           Fix_htmlreport "$html_report" "$raida_node" "$c" "$get_status" "$get_request" "$get_response" "$get_ms"
+        fi  
+
     done
 
 }
@@ -915,6 +1016,198 @@ Load_testcoin(){
         Error "$error_01"
         return 1
     fi
+}
+
+Check_html_template(){
+    local html_template
+    local html_report
+
+    now=$(date +"%F %T")
+    html_template="$1"
+    if [ ! -r $html_template ];then
+        return 1
+    fi 
+    html_report="$( echo $html_template | sed 's/template/test/g' )"
+    [ -d $HTML_DIR ] || mkdir $HTML_DIR
+    cp -f $html_template $HTML_DIR/$html_report
+    sed -i "s/\[TIME\]/$now/g" $HTML_DIR/$html_report 
+    return 0
+}
+
+ask_html(){
+    local input
+    local opt
+    local retval
+    
+    opt="$1"
+    save_to_html="NO"
+    echo -n "$string_06 " && read input
+    echo
+    [ -z $input ] && input="N"
+    if [ "$input" == "y" -o "$input" == "Y" ];then
+        save_to_html="YES"
+
+        case "$opt" in 
+            FIX)
+                for ((i=1;i<=4;i++))
+                do
+                    html_template="fix${i}template.html"
+                    Check_html_template "$html_template"
+                    retval=$?
+                    if [ $retval -eq 1 ];then
+                        Error "Error: The file $WORKDIR/$html_template Not Found."
+                        return 1
+                    fi
+                done
+                ;;
+            
+            HINTS)
+                html_template="hintstemplate.html"
+                ;;
+
+            TICKET)
+                html_template="tickettemplate.html"
+                ;;
+
+            DETECT)
+                html_template="detecttemplate.html"
+                ;;
+
+            ECHO)
+                html_template="echotemplate.html"
+                ;; 
+
+        esac
+
+        if [ "$opt" != "FIX" ]; then
+            Check_html_template "$html_template"
+            retval=$?
+            if [ $retval -eq 1 ];then
+                Error "Error: The file $WORKDIR/$html_template Not Found."
+                return 1
+            fi
+        fi
+
+    fi
+    return 0
+}
+
+Basic_htmlreport(){
+    local html_report
+    local raida_node
+    local get_status
+    local get_request
+    local get_response
+    local get_ms
+    local html_ms
+    local html_request
+    local html_response
+    local html_status
+
+    html="$1"
+    raida_node="$2"
+    get_status="$3"
+    get_request="$4"
+    get_response="$5"
+    get_ms="$6"
+
+    html_report="$HTML_DIR/$html"
+    key_status="\[${raida_node}RAIDASTATUS\]"
+    key_ms="\[${raida_node}RAIDAMS\]"
+    key_request="\[${raida_node}RAIDAREQUEST\]"
+    key_response="\[${raida_node}RAIDARESPONSE\]"
+    html_ms="Milliseconds: $get_ms"
+
+    html_request="$(echo $get_request | sed -e 's/\&/\\&/g' -e 's/\[/\\[/g' -e 's/\]/\\]/g' -e 's/\;/\\;/g')"
+    html_response="$(echo $get_response | sed -e 's/\&/\\&/g' -e 's/\[/\\[/g' -e 's/\]/\\]/g' -e 's/\;/\\;/g')"
+
+    case "$html" in
+        hintstest.html)
+            is_success=$(echo "$get_status" | grep -i success | wc -l)
+            if [ "$is_success" == "1" ];then
+                html_status="<span style='color:green;'>${get_status}</span>"
+            else
+                html_status="<span style='color:red;'>${get_status}</span>"
+            fi
+            ;;
+
+        tickettest.html)
+            is_success=$(echo "$get_status" | grep -w ticket | wc -l)
+            if [ "$is_success" == "1" ];then
+                html_status="<span style='color:green;'>${get_status}</span>"
+            else
+                html_status="<span style='color:red;'>${get_status}</span>"
+            fi
+            ;;
+
+        detecttest.html)
+            is_success=$(echo "$get_status" | grep -w pass | wc -l)
+            if [ "$is_success" == "1" ];then
+                html_status="<span style='color:green;'>${get_status}</span>"
+            else
+                html_status="<span style='color:red;'>${get_status}</span>"
+            fi
+            ;;
+
+        echotest.html)
+            is_success=$(echo "$get_status" | grep -w ready | wc -l)
+            if [ "$is_success" == "1" ];then
+                html_status="<span style='color:green;'>${get_status}</span>"
+            else
+                html_status="<span style='color:red;'>${get_status}</span>"
+            fi
+            ;;
+
+    esac
+
+    sed -i "s|$key_status|$html_status|g" $html_report
+    sed -i "s|$key_ms|$html_ms|g" $html_report
+    sed -i "s|${key_request}|${html_request}|g" $html_report
+    sed -i "s|$key_response|$html_response|g" $html_report
+}
+
+Fix_htmlreport(){
+    local html_report
+    local raida_node
+    local fix_corner
+    local get_status
+    local get_request
+    local get_response
+    local get_ms
+    local html_ms
+    local html_request
+    local html_response
+    local html_status
+
+    html_report="$1"
+    raida_node="$2"
+    fix_corner="$3"
+    get_status="$4"
+    get_request="$5"
+    get_response="$6"
+    get_ms="$7"
+
+    html_report="$HTML_DIR/$html_report"
+    key_status="\[${raida_node}RAIDASTATUS\]"
+    key_ms="\[${raida_node}RAIDAMS\]"
+    key_request="\[${raida_node}RAIDAREQUEST\]"
+    key_response="\[${raida_node}RAIDARESPONSE\]"
+    html_ms="Milliseconds: $get_ms"
+    
+    html_request="$(echo $get_request | sed -e 's/\&/\\&/g' -e 's/\[/\\[/g' -e 's/\]/\\]/g' -e 's/\;/\\;/g')"
+    html_response="$(echo $get_response | sed -e 's/\&/\\&/g' -e 's/\[/\\[/g' -e 's/\]/\\]/g' -e 's/\;/\\;/g')"
+
+    if [ "$get_status" != "success" ];then
+        html_status="<span style='color:red;'>${get_status}</span>"
+    else
+        html_status="<span style='color:green;'>${get_status}</span>"
+    fi
+    
+    sed -i "s|$key_status|$html_status|g" $html_report
+    sed -i "s|$key_ms|$html_ms|g" $html_report
+    sed -i "s|${key_request}|${html_request}|g" $html_report
+    sed -i "s|$key_response|$html_response|g" $html_report
+
 }
 
 
