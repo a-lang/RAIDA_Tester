@@ -8,6 +8,7 @@ It's able to work on all Linux distro and Mac OS.
 Demonstration: https://asciinema.org/a/4bbzhe6azodv7ovl1nupg3k40
 
 ![image](https://raw.githubusercontent.com/a-lang/RAIDA_Tester/master/raida-tester_on_Mac.png)
+![image](https://raw.githubusercontent.com/a-lang/RAIDA_Tester/master/html_report.png)
 
 
 Requirement
