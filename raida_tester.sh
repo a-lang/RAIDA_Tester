@@ -874,7 +874,8 @@ _fix_all_corners(){
                 get_ticket_status[$n]="$status"
             else
                 get_ticket_status[$n]="empty"
-                Fix_ticket_retval=1   
+                Fix_ticket_retval=1 
+                break  
             fi
 
             ((n++))
@@ -906,6 +907,7 @@ _fix_all_corners(){
 
         else
             fix_retval=1
+            elapsed=0
 
         fi
         
