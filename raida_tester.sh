@@ -28,7 +28,7 @@ string_02="Loading test coin: $WORKDIR/$testcoin"
 string_03="Checking ticket..."
 string_04="Empty ticket"
 string_05="HTTPS Access No Response"
-string_06="Would you like to generate a html report for test results? (y/N)"
+string_06="Would you like to generate a html report for test results (y/N)?"
 error_01="Error: Testcoin File Not Found ($WORKDIR/$testcoin)"
 error_02="Error: Invalid Command"
 error_03="Error: Test Coin File seems to be Wrong Format ($WORKDIR/$testcoin)"
@@ -178,7 +178,7 @@ Advanced(){
     while true
     do
         echo "Test All RAIDA Nodes [0-5]: 1.Echo 2.Detect 3.Ticket 4.Hints 5.Fix 0.Exit"
-        echo "NOTE: This process may take a few mins to check all nodes please be patient until all check done."
+        echo "NOTE: This process may take a few mins to check all nodes please be patient until all checks done."
         echo -n "$PROMPT> " && read input
         if [ $input -ge 1 -a $input -le 5 ] 2>/dev/null ;then
             case "$input" in
@@ -544,6 +544,7 @@ _all_hints(){
             result="pass"
         else
             result="${_RED_}fail${_REST_}"
+            elapsed=0
         fi 
         echo -e -n "-> RAIDA#${n}: ${result}(${elapsed}ms)  "
 
@@ -564,6 +565,8 @@ _all_hints(){
 }
 
 _hints(){
+    local input
+
     Load_testcoin
     is_testcoin=$?
     [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
@@ -580,26 +583,29 @@ _hints(){
     raida_url="$raida_url?nn=$nn&sn=$sn&an=$an&pan=$an&denomination=$denom"
 
     # Test the Echo
-    test_echo=$(_echo $input)
+    _echo $input >/dev/null 2>&1
     run_echo=$?
     if [ $run_echo -eq 1 ];then
         Error "$error_05"
+        status="ECHO Failed"
         return 1
     fi 
 
     # Test the Detect
-    test_detect=$(_detect $input)
+    _detect $input >/dev/null 2>&1
     run_detect=$?
     if [ $run_detect -eq 1 ];then
         Error "$error_06"
+        status="DETECT Failed"
         return 1
     fi 
 
     # Test the Get_ticket
-    test_get_ticket=$(_get_ticket $input)
+    _get_ticket $input >/dev/null 2>&1
     run_get_ticket=$?
     if [ $run_get_ticket -eq 1 ];then
         Error "$error_07"
+        status="Get Ticket Failed"
         return 1
     fi 
 
@@ -907,6 +913,7 @@ _fix_all_corners(){
 
         else
             fix_retval=1
+            status="empty ticket"
             elapsed=0
 
         fi
