@@ -258,7 +258,7 @@ _all_echo(){
     retval=$?
     [ $retval -eq 1 ] && return 1 # html template file not found
 
-    echo -n "ECHO Results: "
+    echo "ECHO Results: "
     for ((n=0;n<$raida_nums;n++))
     do
         _echo $n >/dev/null 2>&1
@@ -268,7 +268,8 @@ _all_echo(){
         else
             result="${_RED_}fail${_REST_}"
         fi 
-        echo -e -n "-> RAIDA#${n}: ${result}(${elapsed}ms)  "
+        
+        Output $n "$result" $elapsed
 
         if [ "$save_to_html" == "YES" ];then
             html_report="echotest.html"
@@ -333,7 +334,7 @@ _all_detect(){
     retval=$?
     [ $retval -eq 1 ] && return 1 # html template file not found
 
-    echo -n "DETECT Results: "
+    echo "DETECT Results: "
     for ((n=0;n<$raida_nums;n++))
     do
         _detect $n >/dev/null 2>&1
@@ -343,7 +344,8 @@ _all_detect(){
         else
             result="${_RED_}fail${_REST_}"
         fi 
-        echo -e -n "-> RAIDA#${n}: ${result}(${elapsed}ms)  "
+
+        Output $n "$result" $elapsed
 
         if [ "$save_to_html" == "YES" ];then
             html_report="detecttest.html"
@@ -429,7 +431,7 @@ _all_ticket(){
     retval=$?
     [ $retval -eq 1 ] && return 1 # html template file not found
 
-    echo -n "TICKET Results: "
+    echo "TICKET Results: "
     for ((n=0;n<$raida_nums;n++))
     do
         _get_ticket $n >/dev/null 2>&1
@@ -439,7 +441,8 @@ _all_ticket(){
         else
             result="${_RED_}fail${_REST_}"
         fi 
-        echo -e -n "-> RAIDA#${n}: ${result}(${elapsed}ms)  "
+        
+        Output $n "$result" $elapsed
 
         if [ "$save_to_html" == "YES" ];then
             html_report="tickettest.html"
@@ -535,7 +538,7 @@ _all_hints(){
     retval=$?
     [ $retval -eq 1 ] && return 1 # html template file not found
 
-    echo -n "HINTS Results: "
+    echo "HINTS Results: "
     for ((n=0;n<$raida_nums;n++))
     do
         _hints $n > /dev/null 2>&1
@@ -546,7 +549,8 @@ _all_hints(){
             result="${_RED_}fail${_REST_}"
             elapsed=0
         fi 
-        echo -e -n "-> RAIDA#${n}: ${result}(${elapsed}ms)  "
+        
+        Output $n "$result" $elapsed
 
         if [ "$save_to_html" == "YES" ];then
             html_report="hintstest.html"
@@ -665,10 +669,11 @@ _all_fix(){
     [ $retval -eq 1 ] && return 1 # html template file not found
 
     echo
-    echo "FIX Results [Fix1,Fix2,Fix3,Fix4]: "
+    echo "FIX Results: [Fix1][Fix2][Fix3][Fix4] "
     for ((n=0;n<$raida_nums;n++))
     do
-        echo -n "-> RAIDA#${n}: "
+        #echo -n "-> RAIDA#${n}: "
+        printf " %.18s " "RAIDA($n).............."
         _fix_all_corners $n  
 
     done
@@ -919,9 +924,11 @@ _fix_all_corners(){
         fi
         
         if [ $fix_retval -eq 0 ];then
-            [ $c -eq 4 ] && echo "pass" || echo -n "pass, "
+            #[ $c -eq 4 ] && echo "pass" || echo -n "pass,"
+            [ $c -eq 4 ] && echo "[pass]" || echo -n "[pass]"
         else
-            [ $c -eq 4 ] && echo -e "${_RED_}fail${_REST_}" || echo -e -n "${_RED_}fail${_REST_}, "
+            #[ $c -eq 4 ] && echo -e "${_RED_}fail${_REST_}" || echo -e -n "${_RED_}fail${_REST_},"
+            [ $c -eq 4 ] && echo -e "[${_RED_}fail${_REST_}]" || echo -e -n "[${_RED_}fail${_REST_}]"
         fi
 
         if [ "$save_to_html" == "YES" ];then
@@ -1217,6 +1224,14 @@ Fix_htmlreport(){
     sed -i "s|${key_request}|${html_request}|g" $html_report
     sed -i "s|$key_response|$html_response|g" $html_report
 
+}
+
+Output(){
+    local node status ms
+    node=$1
+    status="$2"
+    ms=$3
+    printf " %.18s [%b] (%dms)\n" "RAIDA($node).............." "$status" $ms
 }
 
 
