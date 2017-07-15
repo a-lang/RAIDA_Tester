@@ -177,7 +177,7 @@ Advanced(){
     PROMPT="ADVANCED"
     while true
     do
-        echo "Test All RAIDA Nodes [0-5]: 1.Echo 2.Detect 3.Ticket 4.Hints 5.Fix 0.Exit"
+        echo "Test All RAIDA Nodes [0-5]: 1.Echo 2.Detect 3.Ticket 4.Hints 5.Fix q.Exit"
         echo "NOTE: This process may take a few mins to check all nodes please be patient until all checks done."
         echo -n "$PROMPT> " && read input
         if [ $input -ge 1 -a $input -le 5 ] 2>/dev/null ;then
@@ -199,7 +199,7 @@ Advanced(){
                     ;;
             esac
 
-        elif [ $input -eq 0 ] 2>/dev/null ;then
+        elif [ "$input" == "q" ] 2>/dev/null ;then
             break
 
         else
@@ -236,12 +236,12 @@ Process_request(){
 
     while [ "$input" != "$raida_nums" ]
     do
-        echo "What RAIDA# do you want to test $PROMPT? Enter 25 to end."
+        echo "What RAIDA# do you want to test $PROMPT? Enter q to end."
         echo -n "$PROMPT> " && read input
-        if [ $input -ge 0 -a $input -lt 25  ] 2>/dev/null;then
+        if [ $input -ge 0 -a $input -lt $raida_nums  ] 2>/dev/null;then
             $option $input
 
-        elif [ "$input" -eq "$raida_nums" ] 2>/dev/null;then
+        elif [ "$input" == "q" ] 2>/dev/null;then
             break
 
         else
