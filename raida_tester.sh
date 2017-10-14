@@ -2,9 +2,14 @@
 # 
 # Created: 2017-3-20, A-Lang
 # 
+# Change Logs:
+#   171014 - Added test for multi_detect
+#
 
 # Variables
+version="171014"
 testcoin="testcoin.stack"
+testcoin_multi="testcoin_multi.stack"
 raida_nums=25
 _REST_='\033[0m'
 _GREEN_='\033[32m'
@@ -12,6 +17,7 @@ _RED_='\033[31m'
 _BOLD_='\033[1m'
 CURL_CMD="curl"
 CURL_OPT="-qSfs -m 60"
+CURL_OPT_multi="-qSfs -m 60 -X POST"
 JQ_CMD="jq"
 HTML_DIR="html"
 
@@ -25,13 +31,16 @@ RUNNINGARCH=$(`echo uname -m` | tr '[a-z]' '[A-Z]')
 # Strings
 string_01="Could not Check hints because get_ticket service failed to get a ticket. Fix get_ticket first."
 string_02="Loading test coin: $WORKDIR/$testcoin"
+string_02_1="Loading test coin: $WORKDIR/$testcoin_multi"
 string_03="Checking ticket..."
 string_04="Empty ticket"
 string_05="HTTPS Access No Response"
 string_06="Would you like to generate a html report for test results (y/N)?"
 error_01="Error: Testcoin File Not Found ($WORKDIR/$testcoin)"
+error_01_1="Error: Testcoin File Not Found ($WORKDIR/$testcoin_multi)"
 error_02="Error: Invalid Command"
 error_03="Error: Test Coin File seems to be Wrong Format ($WORKDIR/$testcoin)"
+error_03_1="Error: Test Coin File seems to be Wrong Format ($WORKDIR/$testcoin_multi)"
 error_04="Error: Ticket Check Failed "
 error_05="Error: Test failed, run the echo to see more details."
 error_06="Error: Test failed, run the detect to see more details."
@@ -61,6 +70,7 @@ Show_head(){
 # in the same folder as this program to run tests.                          #
 # The test coin will not be written to.                                     #
 #############################################################################
+[Version: ${version}]
 EOF
 }
 
@@ -68,13 +78,14 @@ Show_menu(){
     cat <<EOF
 ===================================
 RAIDA Tester Commands Available:
-[+] echo       (e)
-[+] detect     (d)
-[+] get_ticket (g)
-[+] hints      (h)
-[+] fix        (f)
-[+] advanced   (a)
-[+] quit       (q)
+[+] echo         (e)
+[+] detect       (d)
+[+] get_ticket   (g)
+[+] hints        (h)
+[+] fix          (f)
+[+] multi_detect (md)
+[+] advanced     (a)
+[+] quit         (q)
 EOF
 
 }
@@ -121,6 +132,9 @@ Main()
 
         elif [ "$input" == "fix" -o "$input" == "f" ];then
             Process_request _fix
+
+        elif [ "$input" == "multi_detect" -o "$input" == "md" ];then
+            Process_request _multi_detect    
 
         elif [ "$input" == "advanced" -o "$input" == "a" ];then
             Advanced
@@ -229,6 +243,9 @@ Process_request(){
         _fix)
         PROMPT="FIX"
         ;;
+        _multi_detect)
+        PROMPT="MULTI_DETECT"
+        ;; 
         *)
         PROMPT="XXX"
         ;;
@@ -236,6 +253,7 @@ Process_request(){
 
     while [ "$input" != "$raida_nums" ]
     do
+        echo
         echo "What RAIDA# do you want to test $PROMPT? Enter q to end."
         echo -n "$PROMPT> " && read input
         if [ $input -ge 0 -a $input -lt $raida_nums  ] 2>/dev/null;then
@@ -946,6 +964,132 @@ _fix_all_corners(){
 
 }
 
+_multi_detect(){
+    unset array_nn
+    unset array_sn
+    unset array_an
+    unset array_denom
+
+    # Check the testcoin file
+    Load_testcoin_multi
+    is_testcoin=$?
+    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+
+    input="$1"
+    raida="raida$input"
+    raida_url="https://$raida.cloudcoin.global/service/multi_detect"
+    nn=`$JQ_CMD -r '.cloudcoin[].nn' $testcoin_multi`
+    sn=`$JQ_CMD -r '.cloudcoin[].sn' $testcoin_multi`
+    an=`$JQ_CMD -r ".cloudcoin[].an[$input]" $testcoin_multi`
+    array_nn=( $nn )
+    array_sn=( $sn )
+    array_an=( $an )
+
+    for s in "${array_sn[@]}"
+    do
+        array_denom+=( "$(Get_denom $s)" )
+    done
+
+    #echo "nn = ${array_nn[@]}"
+    #echo "sn = ${array_sn[@]}"
+    #echo "an = ${array_an[@]}"
+    #echo "denom = ${array_denom[@]}"
+
+    # Test the Echo
+    test_echo=$(_echo $input)
+    run_echo=$?
+    if [ $run_echo -eq 1 ];then
+        Error "$error_05"
+        return 1
+    fi 
+
+    index=0
+    for n in "${array_nn[@]}"
+    do
+        if [ $index -eq 0 ];then
+            post_nns="nns[]=$n"
+        else
+            post_nns="$post_nns&nns[]=$n"
+        fi
+        ((index++))
+    done
+
+    index=0
+    for s in "${array_sn[@]}"
+    do
+        if [ $index -eq 0 ];then
+            post_sns="sns[]=$s"
+        else
+            post_sns="$post_sns&sns[]=$s"
+        fi
+        ((index++))
+    done
+    
+    index=0
+    for a in "${array_an[@]}"
+    do
+        if [ $index -eq 0 ];then
+            post_ans="ans[]=$a"
+            post_pans="pans[]=$a"
+        else
+            post_ans="$post_ans&ans[]=$a"
+            post_pans="$post_pans&pans[]=$a"
+        fi
+        ((index++))
+    done
+
+    index=0
+    for d in "${array_denom[@]}"
+    do
+        if [ $index -eq 0 ];then
+            post_denoms="denomination[]=$d"
+        else
+            post_denoms="$post_denoms&denomination[]=$d"
+        fi
+        ((index++))
+    done
+
+    post_data="$post_nns&$post_sns&$post_ans&$post_pans&$post_denoms"
+
+    #echo "post_nns = $post_nns"
+    #echo "post_sns = $post_sns"
+    #echo "post_ans = $post_ans"
+    #echo "post_pans = $post_pans"
+    #echo "post_denoms = $post_denoms"
+    #echo "post_data = $post_data"
+    
+    detect_retval=0
+    start_s=$(Timer)
+    http_response=$($CURL_CMD $CURL_OPT_multi -d "$post_data" $raida_url 2>&1)
+    http_retval=$?
+    end_s=$(Timer)
+    elapsed=$(( (end_s-start_s)/1000000 ))
+
+    if [ $http_retval -eq 0 ];then
+        status=$(echo $http_response | $JQ_CMD -r '.[0].status')
+
+        if [ "$status" == "pass" -o "$status" == "fail"  ];then
+            response_color="$_GREEN_$http_response$_REST_"
+        else
+            response_color="$_RED_$http_response$_REST_"
+            detect_retval=1
+            
+        fi
+    else
+        response_color="$_RED_$http_response$_REST_"
+        detect_retval=1
+    fi
+
+    echo
+    echo "Milliseconds: $elapsed"
+    echo "Request: $raida_url"
+    echo -e "Response: $response_color"
+    echo
+
+    return $detect_retval
+}
+
+
 
 Hints_ticket_request(){
     raida_url="$1"
@@ -1030,6 +1174,23 @@ Load_testcoin(){
         fi
     else
         Error "$error_01"
+        return 1
+    fi
+}
+
+Load_testcoin_multi(){
+    if [ -f $testcoin_multi ];then
+        $JQ_CMD '.cloudcoin' $testcoin_multi >/dev/null 2>&1
+        is_json=$? 
+        if [ $is_json -eq 0 ];then # Is JSON
+            echo -e "$string_02_1"
+            return 0
+        else # Not JSON
+            Error "$error_03_1"
+            return 1
+        fi
+    else
+        Error "$error_01_1"
         return 1
     fi
 }
