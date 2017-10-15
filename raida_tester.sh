@@ -4,10 +4,11 @@
 # 
 # Change Logs:
 #   171014 - Added test for multi_detect
+#   171015 - Added detection for version
 #
 
 # Variables
-version="171014"
+version="171015"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
 raida_nums=25
@@ -271,6 +272,7 @@ Process_request(){
 
 _all_echo(){
     local n
+    local version
 
     ask_html "ECHO"
     retval=$?
@@ -285,9 +287,10 @@ _all_echo(){
             result="pass"
         else
             result="${_RED_}fail${_REST_}"
-        fi 
-        
-        Output $n "$result" $elapsed
+        fi
+
+        version=$(Get_version $n) 
+        Output $n "v$version|$result" $elapsed
 
         if [ "$save_to_html" == "YES" ];then
             html_report="echotest.html"
@@ -296,8 +299,9 @@ _all_echo(){
             get_request="$raida_url"
             get_response="$http_response"
             get_ms="$elapsed"
+            get_ver="$version"
 
-            Basic_htmlreport "$html_report" "$raida_node" "$get_status" "$get_request" "$get_response" "$get_ms"
+            Basic_htmlreport "$html_report" "$raida_node" "$get_status" "$get_request" "$get_response" "$get_ms" "$get_ver"
         fi
     done
     echo;echo
@@ -1287,13 +1291,16 @@ Basic_htmlreport(){
     get_request="$4"
     get_response="$5"
     get_ms="$6"
+    get_ver="$7"
 
     html_report="$HTML_DIR/$html"
     key_status="\[${raida_node}RAIDASTATUS\]"
     key_ms="\[${raida_node}RAIDAMS\]"
+    key_ver="\[${raida_node}RAIDAVER\]"
     key_request="\[${raida_node}RAIDAREQUEST\]"
     key_response="\[${raida_node}RAIDARESPONSE\]"
     html_ms="Milliseconds: $get_ms"
+    html_ver="Version: $get_ver"
 
     html_request="$(echo $get_request | sed -e 's/\&/\\&/g' -e 's/\[/\\[/g' -e 's/\]/\\]/g' -e 's/\;/\\;/g')"
     html_response="$(echo $get_response | sed -e 's/\&/\\&/g' -e 's/\[/\\[/g' -e 's/\]/\\]/g' -e 's/\;/\\;/g')"
@@ -1341,6 +1348,7 @@ Basic_htmlreport(){
     sed -i "s|$key_ms|$html_ms|g" $html_report
     sed -i "s|${key_request}|${html_request}|g" $html_report
     sed -i "s|$key_response|$html_response|g" $html_report
+    sed -i "s|$key_ver|$html_ver|g" $html_report
 }
 
 Fix_htmlreport(){
@@ -1393,6 +1401,24 @@ Output(){
     status="$2"
     ms=$3
     printf " %.18s [%b] (%dms)\n" "RAIDA($node).............." "$status" $ms
+}
+
+Get_version(){
+    local node
+    local version
+    node=$1
+    raida="raida$node"
+    raida_url="https://$raida.cloudcoin.global/service/version"
+    http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
+    http_retval=$?
+
+    if [ $http_retval -eq 0 ]; then
+        version=$(echo $http_response | $JQ_CMD -r '.version')
+    else
+        version="---"
+    fi
+
+    echo "$version"
 }
 
 
