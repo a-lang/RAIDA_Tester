@@ -3,12 +3,13 @@
 # Created: 2017-3-20, A-Lang
 # 
 # Change Logs:
-#   171014 - Added test for multi_detect
-#   171015 - Added detection for version
+#   17/10/14 - Added test for multi_detect
+#   17/10/15 - Added detection for version
+#   18/04/10 - JSON validation for ECHO
 #
 
 # Variables
-version="171015"
+version="180410"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
 raida_nums=25
@@ -320,7 +321,8 @@ _echo()
     elapsed=$(( (end_s-start_s)/1000000 ))
 
     if [ $http_retval -eq 0 ]; then
-        status=$(echo $http_response | $JQ_CMD -r '.status')
+        status=$(echo $http_response | $JQ_CMD -r '.status' 2>/dev/null)
+        [ -z $status ] && status="invalid json data"
     else
         status="error"
         echo_retval=1
@@ -753,7 +755,7 @@ _fix(){
     while true
     do
         echo "What RAIDA triad do you want to use? 1.Upper-Left, 2.Upper-Right, 3.Lower-Left, 4.Lower-Right"
-        read input
+        echo -n "> " && read input
         if [ $input -gt 0 -a $input -lt 5  ];then
             array_name="array_fix_corner$input"
             array_trusted_servers=$(eval echo \${$array_name[@]})
