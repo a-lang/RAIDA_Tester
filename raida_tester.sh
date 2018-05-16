@@ -1074,7 +1074,7 @@ _multi_detect(){
     if [ $http_retval -eq 0 ];then
         status=$(echo $http_response | $JQ_CMD -r '.[0].status')
 
-        if [ "$status" == "pass" -o "$status" == "fail"  ];then
+        if [ "$status" == "pass" ];then
             response_color="$_GREEN_$http_response$_REST_"
         else
             response_color="$_RED_$http_response$_REST_"
