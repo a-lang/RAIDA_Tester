@@ -13,6 +13,7 @@ version="180410"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
 raida_nums=25
+max_latency=15
 _REST_='\033[0m'
 _GREEN_='\033[32m'
 _RED_='\033[31m'
@@ -568,13 +569,19 @@ _all_hints(){
         _hints $n > /dev/null 2>&1
         run_hints=$?
         if [ $run_hints -eq 0 ];then
-            result="pass"
+            result="${ret_hints_ms}s -> pass"
+            if [ $ret_hints_ms -lt 1 ]; then 
+                result="<1s -> pass"
+            elif [ $ret_hints_ms -gt $max_latency ];then
+                result="${_RED_}${ret_hints_ms}s -> NOT GOOD${_REST_}"
+            fi
         else
-            result="${_RED_}fail${_REST_}"
+            result="${_RED_}-->fail<--${_REST_}"
             elapsed=0
         fi 
         
-        Output $n "$result" $elapsed
+        #Output $n "$result" $elapsed
+        printf " %.18s [%12b] (%dms)\n" "RAIDA($n).............." "$result" $elapsed
 
         if [ "$save_to_html" == "YES" ];then
             html_report="hintstest.html"
@@ -641,6 +648,7 @@ _hints(){
     Hints_ticket_request $raida_url
     Hints_ticket_retval=$?
     hints_retval=0
+    ret_hints_ms=99999999
             
     if [ $Hints_ticket_retval -eq 0 ]; then
         echo "Last ticket is: $ticket"
@@ -655,9 +663,15 @@ _hints(){
         if [ $http_retval -eq 0 ]; then
             _sn=$(echo $http_response | cut -d: -f1)
             _ms=$(echo $http_response | cut -d: -f2)
-            status="Success, The serial number was $_sn and the ticket age was $_ms milliseconds old."
+            if [ $_ms -ge $max_latency ]; then
+                _ms_color="$_RED_$_ms$_REST_"
+            else
+                _ms_color="$_GREEN_$_ms$_REST_"
+            fi
+            status="Success, The serial number was $_sn and the ticket age was $_ms_color seconds old."
             status_color="$_GREEN_$status$_REST_"
             response_color="$_GREEN_$http_response$_REST_"
+            ret_hints_ms=$_ms
         else
             status="error"
             status_color="$_RED_$status$_REST_"
