@@ -9,7 +9,7 @@
 #
 
 # Variables
-version="180410"
+version="180517"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
 raida_nums=25
