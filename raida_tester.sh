@@ -9,7 +9,7 @@
 #
 
 # Variables
-version="180517"
+version="180605"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
 raida_nums=25
@@ -665,12 +665,15 @@ _hints(){
             _ms=$(echo $http_response | cut -d: -f2)
             if [ $_ms -ge $max_latency ]; then
                 _ms_color="$_RED_$_ms$_REST_"
+                status="Error"
+                status_color="$_RED_$status$_REST_"
+                response_color="$_RED_$http_response$_REST_"
             else
                 _ms_color="$_GREEN_$_ms$_REST_"
+                status="Success, The serial number was $_sn and the ticket age was $_ms_color seconds old."
+                status_color="$_GREEN_$status$_REST_"
+                response_color="$_GREEN_$http_response$_REST_"
             fi
-            status="Success, The serial number was $_sn and the ticket age was $_ms_color seconds old."
-            status_color="$_GREEN_$status$_REST_"
-            response_color="$_GREEN_$http_response$_REST_"
             ret_hints_ms=$_ms
         else
             status="error"
