@@ -9,7 +9,7 @@
 #
 
 # Variables
-version="180605"
+version="180609"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
 raida_nums=25
@@ -569,19 +569,18 @@ _all_hints(){
         _hints $n > /dev/null 2>&1
         run_hints=$?
         if [ $run_hints -eq 0 ];then
-            result="${ret_hints_ms}s -> pass"
-            if [ $ret_hints_ms -lt 1 ]; then 
-                result="<1s -> pass"
-            elif [ $ret_hints_ms -gt $max_latency ];then
-                result="${_RED_}${ret_hints_ms}s -> NOT GOOD${_REST_}"
+            result="PASS"
+            if [ $ret_hints_ms -gt $max_latency -o $ret_hints_ms -lt 0 ];then
+                result="${_RED_}NOT GOOD${_REST_}"
+                
             fi
+
         else
-            result="${_RED_}-->fail<--${_REST_}"
-            elapsed=0
+            result="${_RED_}FAIL${_REST_}"
+            
         fi 
         
-        #Output $n "$result" $elapsed
-        printf " %.18s [%12b] (%dms)\n" "RAIDA($n).............." "$result" $elapsed
+        printf " %.18s [%4b] (%4ims) %-12s \n" "RAIDA($n).............." "$result" $hints_elapsed "$hints_response"
 
         if [ "$save_to_html" == "YES" ];then
             html_report="hintstest.html"
@@ -601,6 +600,10 @@ _all_hints(){
 
 _hints(){
     local input
+    hints_retval=0
+    ret_hints_ms=99999999
+    hints_response=""
+    hints_elapsed=0
 
     Load_testcoin
     is_testcoin=$?
@@ -623,6 +626,7 @@ _hints(){
     if [ $run_echo -eq 1 ];then
         Error "$error_05"
         status="ECHO Failed"
+        hints_response="$status"
         return 1
     fi 
 
@@ -632,6 +636,7 @@ _hints(){
     if [ $run_detect -eq 1 ];then
         Error "$error_06"
         status="DETECT Failed"
+        hints_response="$status"
         return 1
     fi 
 
@@ -641,14 +646,14 @@ _hints(){
     if [ $run_get_ticket -eq 1 ];then
         Error "$error_07"
         status="Get Ticket Failed"
+        hints_response="$status"
         return 1
     fi 
 
     echo "$string_03"
     Hints_ticket_request $raida_url
     Hints_ticket_retval=$?
-    hints_retval=0
-    ret_hints_ms=99999999
+    
             
     if [ $Hints_ticket_retval -eq 0 ]; then
         echo "Last ticket is: $ticket"
@@ -663,7 +668,7 @@ _hints(){
         if [ $http_retval -eq 0 ]; then
             _sn=$(echo $http_response | cut -d: -f1)
             _ms=$(echo $http_response | cut -d: -f2)
-            if [ $_ms -ge $max_latency ]; then
+            if [ $_ms -ge $max_latency -o $_ms -lt 0 ]; then
                 _ms_color="$_RED_$_ms$_REST_"
                 status="Error"
                 status_color="$_RED_$status$_REST_"
@@ -693,6 +698,8 @@ _hints(){
         hints_retval=1
     fi
 
+    hints_response=$http_response
+    hints_elapsed=$elapsed
     return $hints_retval
 }
 
