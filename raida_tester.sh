@@ -9,7 +9,7 @@
 #
 
 # Variables
-version="180609"
+version="180610"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
 raida_nums=25
@@ -286,13 +286,17 @@ _all_echo(){
         _echo $n >/dev/null 2>&1
         run_echo=$?
         if [ $run_echo -eq 0 ];then
-            result="pass"
+            result="PASS"
         else
-            result="${_RED_}fail${_REST_}"
+            result="${_RED_}FAIL${_REST_}"
         fi
 
         version=$(Get_version $n) 
-        Output $n "v$version|$result" $elapsed
+        Output $n "v$version|$result" $echo_elapsed
+
+        if [ "$result" != "PASS" ];then
+            Output2 "$echo_response"
+        fi
 
         if [ "$save_to_html" == "YES" ];then
             html_report="echotest.html"
@@ -311,6 +315,9 @@ _all_echo(){
 
 _echo()
 {
+    echo_response=""
+    echo_elapsed=0
+    
     echo_retval=0
     input="$1"
     raida="raida$input"
@@ -344,6 +351,9 @@ _echo()
     echo "Request: $raida_url"
     echo -e "Response: $response_color"
     echo
+    
+    echo_response=$http_response
+    echo_elapsed=$elapsed
     return $echo_retval
 }
 
@@ -365,12 +375,16 @@ _all_detect(){
         _detect $n >/dev/null 2>&1
         run_detect=$?
         if [ $run_detect -eq 0 ];then
-            result="pass"
+            result="PASS"
         else
-            result="${_RED_}fail${_REST_}"
+            result="${_RED_}FAIL${_REST_}"
         fi 
 
-        Output $n "$result" $elapsed
+        Output $n "$result" $detect_elapsed
+
+        if [ "$result" != "PASS" ];then
+            Output2 "$detect_response"
+        fi
 
         if [ "$save_to_html" == "YES" ];then
             html_report="detecttest.html"
@@ -387,6 +401,9 @@ _all_detect(){
 }
 
 _detect(){
+    detect_response=""
+    detect_elapsed=0
+    
     # Check the local testcoin file
     Load_testcoin
     is_testcoin=$?
@@ -407,6 +424,8 @@ _detect(){
     run_echo=$?
     if [ $run_echo -eq 1 ];then
         Error "$error_05"
+        status="ECHO Failed"
+        detect_response=$status
         return 1
     fi 
             
@@ -440,6 +459,9 @@ _detect(){
     echo "Request: $raida_url"
     echo -e "Response: $response_color"
     echo
+    
+    detect_response=$http_response
+    detect_elapsed=$elapsed
     return $detect_retval
 
 }
@@ -462,12 +484,18 @@ _all_ticket(){
         _get_ticket $n >/dev/null 2>&1
         run_ticket=$?
         if [ $run_ticket -eq 0 ];then
-            result="pass"
+            result="PASS"
         else
-            result="${_RED_}fail${_REST_}"
+            result="${_RED_}FAIL${_REST_}"
         fi 
         
-        Output $n "$result" $elapsed
+        #printf " %.18s [%4b] (%4ims) \n" "RAIDA($n).............." "$result" $ticket_elapsed
+        Output $n "$result" $ticket_elapsed
+
+        if [ "$result" != "PASS" ];then
+            #printf "  %-20b \n" "--> ${_RED_}$ticket_response${_REST_}"
+            Output2 "$ticket_response"
+        fi
 
         if [ "$save_to_html" == "YES" ];then
             html_report="tickettest.html"
@@ -486,6 +514,9 @@ _all_ticket(){
 }
 
 _get_ticket(){
+    ticket_response=""
+    ticket_elapsed=0
+    
     # Check the local testcoin file
     Load_testcoin
     is_testcoin=$?
@@ -506,6 +537,8 @@ _get_ticket(){
     run_echo=$?
     if [ $run_echo -eq 1 ];then
         Error "$error_05"
+        status="ECHO Failed"
+        ticket_response=$status
         return 1
     fi 
 
@@ -514,6 +547,8 @@ _get_ticket(){
     run_detect=$?
     if [ $run_detect -eq 1 ];then
         Error "$error_06"
+        status="DETECT Failed"
+        ticket_response=$status
         return 1
     fi 
     
@@ -547,6 +582,9 @@ _get_ticket(){
     echo "Request: $raida_url"
     echo -e "Response: $response_color"
     echo
+    
+    ticket_response=$http_response
+    ticket_elapsed=$elapsed
     return $get_ticket_retval
 
 }
@@ -580,7 +618,13 @@ _all_hints(){
             
         fi 
         
-        printf " %.18s [%4b] (%4ims) %-12s \n" "RAIDA($n).............." "$result" $hints_elapsed "$hints_response"
+        #printf " %.18s [%4b] (%4ims) %-12s \n" "RAIDA($n).............." "$result" $hints_elapsed "$hints_response"
+        Output $n "$result" $hints_elapsed
+
+        if [ "$result" != "PASS" ];then
+            #printf "  %-20b \n" "--> ${_RED_}$hints_response${_REST_}"
+            Output2 "$hints_response"
+        fi
 
         if [ "$save_to_html" == "YES" ];then
             html_report="hintstest.html"
@@ -1426,7 +1470,14 @@ Output(){
     node=$1
     status="$2"
     ms=$3
-    printf " %.18s [%b] (%dms)\n" "RAIDA($node).............." "$status" $ms
+    #printf " %.18s [%b] (%dms)\n" "RAIDA($node).............." "$status" $ms
+    printf " %.18s [%4b] (%4ims) \n" "RAIDA($node).............." "$status" $ms
+}
+
+Output2(){
+    local msg
+    msg=$1
+    printf "  %-20b \n" "--> ${_RED_}$msg${_REST_}"
 }
 
 Get_version(){
