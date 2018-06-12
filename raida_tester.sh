@@ -276,9 +276,9 @@ _all_echo(){
     local n
     local version
 
-    ask_html "ECHO"
-    retval=$?
-    [ $retval -eq 1 ] && return 1 # html template file not found
+    #ask_html "ECHO"
+    #retval=$?
+    #[ $retval -eq 1 ] && return 1 # html template file not found
 
     echo "ECHO Results: "
     for ((n=0;n<$raida_nums;n++))
@@ -298,17 +298,17 @@ _all_echo(){
             Output2 "$echo_response"
         fi
 
-        if [ "$save_to_html" == "YES" ];then
-            html_report="echotest.html"
-            raida_node=$n
-            get_status="$status"
-            get_request="$raida_url"
-            get_response="$http_response"
-            get_ms="$elapsed"
-            get_ver="$version"
+        #if [ "$save_to_html" == "YES" ];then
+        #    html_report="echotest.html"
+        #    raida_node=$n
+        #    get_status="$status"
+        #    get_request="$raida_url"
+        #    get_response="$http_response"
+        #    get_ms="$elapsed"
+        #    get_ver="$version"
 
-            Basic_htmlreport "$html_report" "$raida_node" "$get_status" "$get_request" "$get_response" "$get_ms" "$get_ver"
-        fi
+        #    Basic_htmlreport "$html_report" "$raida_node" "$get_status" "$get_request" "$get_response" "$get_ms" "$get_ver"
+        #fi
     done
     echo;echo
 }
@@ -365,9 +365,9 @@ _all_detect(){
     is_testcoin=$?
     [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
 
-    ask_html "DETECT"
-    retval=$?
-    [ $retval -eq 1 ] && return 1 # html template file not found
+    #ask_html "DETECT"
+    #retval=$?
+    #[ $retval -eq 1 ] && return 1 # html template file not found
 
     echo "DETECT Results: "
     for ((n=0;n<$raida_nums;n++))
@@ -386,16 +386,16 @@ _all_detect(){
             Output2 "$detect_response"
         fi
 
-        if [ "$save_to_html" == "YES" ];then
-            html_report="detecttest.html"
-            raida_node=$n
-            get_status="$status"
-            get_request="$raida_url"
-            get_response="$http_response"
-            get_ms="$elapsed"
+        #if [ "$save_to_html" == "YES" ];then
+        #    html_report="detecttest.html"
+        #    raida_node=$n
+        #    get_status="$status"
+        #    get_request="$raida_url"
+        #    get_response="$http_response"
+        #    get_ms="$elapsed"
 
-            Basic_htmlreport "$html_report" "$raida_node" "$get_status" "$get_request" "$get_response" "$get_ms"
-        fi
+        #    Basic_htmlreport "$html_report" "$raida_node" "$get_status" "$get_request" "$get_response" "$get_ms"
+        #fi
     done
     echo;echo
 }
@@ -474,9 +474,9 @@ _all_ticket(){
     is_testcoin=$?
     [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
 
-    ask_html "TICKET"
-    retval=$?
-    [ $retval -eq 1 ] && return 1 # html template file not found
+    #ask_html "TICKET"
+    #retval=$?
+    #[ $retval -eq 1 ] && return 1 # html template file not found
 
     echo "TICKET Results: "
     for ((n=0;n<$raida_nums;n++))
@@ -497,16 +497,16 @@ _all_ticket(){
             Output2 "$ticket_response"
         fi
 
-        if [ "$save_to_html" == "YES" ];then
-            html_report="tickettest.html"
-            raida_node=$n
-            get_status="$status"
-            get_request="$raida_url"
-            get_response="$http_response"
-            get_ms="$elapsed"
+        #if [ "$save_to_html" == "YES" ];then
+        #    html_report="tickettest.html"
+        #    raida_node=$n
+        #    get_status="$status"
+        #    get_request="$raida_url"
+        #    get_response="$http_response"
+        #    get_ms="$elapsed"
 
-            Basic_htmlreport "$html_report" "$raida_node" "$get_status" "$get_request" "$get_response" "$get_ms"
-        fi
+        #    Basic_htmlreport "$html_report" "$raida_node" "$get_status" "$get_request" "$get_response" "$get_ms"
+        #fi
 
     done
     echo;echo
@@ -532,15 +532,15 @@ _get_ticket(){
     an="${array_an[$input]}"
     denom=$(Get_denom $sn)
 
-    # Test the Echo
-    test_echo=$(_echo $input)
-    run_echo=$?
-    if [ $run_echo -eq 1 ];then
-        Error "$error_05"
-        status="ECHO Failed"
-        ticket_response=$status
-        return 1
-    fi 
+    ## Test the Echo
+    #test_echo=$(_echo $input)
+    #run_echo=$?
+    #if [ $run_echo -eq 1 ];then
+    #    Error "$error_05"
+    #    status="ECHO Failed"
+    #    ticket_response=$status
+    #    return 1
+    #fi 
 
     # Test the Detect
     test_detect=$(_detect $input)
@@ -597,9 +597,9 @@ _all_hints(){
     is_testcoin=$?
     [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
 
-    ask_html "HINTS"
-    retval=$?
-    [ $retval -eq 1 ] && return 1 # html template file not found
+    #ask_html "HINTS"
+    #retval=$?
+    #[ $retval -eq 1 ] && return 1 # html template file not found
 
     echo "HINTS Results: "
     for ((n=0;n<$raida_nums;n++))
@@ -626,16 +626,16 @@ _all_hints(){
             Output2 "$hints_response"
         fi
 
-        if [ "$save_to_html" == "YES" ];then
-            html_report="hintstest.html"
-            raida_node=$n
-            get_status="$status"
-            get_request="$raida_url"
-            get_response="$http_response"
-            get_ms="$elapsed"
+        #if [ "$save_to_html" == "YES" ];then
+        #    html_report="hintstest.html"
+        #    raida_node=$n
+        #    get_status="$status"
+        #    get_request="$raida_url"
+        #    get_response="$http_response"
+        #    get_ms="$elapsed"
 
-            Basic_htmlreport "$html_report" "$raida_node" "$get_status" "$get_request" "$get_response" "$get_ms"
-        fi  
+        #    Basic_htmlreport "$html_report" "$raida_node" "$get_status" "$get_request" "$get_response" "$get_ms"
+        #fi  
 
     done
     echo;echo
@@ -664,25 +664,25 @@ _hints(){
     raida_url="https://$raida.cloudcoin.global/service/get_ticket"
     raida_url="$raida_url?nn=$nn&sn=$sn&an=$an&pan=$an&denomination=$denom"
 
-    # Test the Echo
-    _echo $input >/dev/null 2>&1
-    run_echo=$?
-    if [ $run_echo -eq 1 ];then
-        Error "$error_05"
-        status="ECHO Failed"
-        hints_response="$status"
-        return 1
-    fi 
+    ## Test the Echo
+    #_echo $input >/dev/null 2>&1
+    #run_echo=$?
+    #if [ $run_echo -eq 1 ];then
+    #    Error "$error_05"
+    #    status="ECHO Failed"
+    #    hints_response="$status"
+    #    return 1
+    #fi 
 
-    # Test the Detect
-    _detect $input >/dev/null 2>&1
-    run_detect=$?
-    if [ $run_detect -eq 1 ];then
-        Error "$error_06"
-        status="DETECT Failed"
-        hints_response="$status"
-        return 1
-    fi 
+    ## Test the Detect
+    #_detect $input >/dev/null 2>&1
+    #run_detect=$?
+    #if [ $run_detect -eq 1 ];then
+    #    Error "$error_06"
+    #    status="DETECT Failed"
+    #    hints_response="$status"
+    #    return 1
+    #fi 
 
     # Test the Get_ticket
     _get_ticket $input >/dev/null 2>&1
@@ -756,9 +756,9 @@ _all_fix(){
     is_testcoin=$?
     [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
 
-    ask_html "FIX"
-    retval=$?
-    [ $retval -eq 1 ] && return 1 # html template file not found
+    #ask_html "FIX"
+    #retval=$?
+    #[ $retval -eq 1 ] && return 1 # html template file not found
 
     echo
     echo "FIX Results: [Fix1][Fix2][Fix3][Fix4] "
@@ -1023,16 +1023,16 @@ _fix_all_corners(){
             [ $c -eq 4 ] && echo -e "[${_RED_}fail${_REST_}]" || echo -e -n "[${_RED_}fail${_REST_}]"
         fi
 
-        if [ "$save_to_html" == "YES" ];then
-            html_report="fix${c}test.html"
-            raida_node=$fixed_server
-            get_status="$status"
-            get_request="$raida_url"
-            get_response="$http_response"
-            get_ms="$elapsed"
+        #if [ "$save_to_html" == "YES" ];then
+        #    html_report="fix${c}test.html"
+        #    raida_node=$fixed_server
+        #    get_status="$status"
+        #    get_request="$raida_url"
+        #    get_response="$http_response"
+        #    get_ms="$elapsed"
 
-           Fix_htmlreport "$html_report" "$raida_node" "$c" "$get_status" "$get_request" "$get_response" "$get_ms"
-        fi  
+        #   Fix_htmlreport "$html_report" "$raida_node" "$c" "$get_status" "$get_request" "$get_response" "$get_ms"
+        #fi  
 
     done
 
