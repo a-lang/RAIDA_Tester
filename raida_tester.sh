@@ -9,7 +9,7 @@
 #
 
 # Variables
-version="180610"
+version="180614"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
 raida_nums=25
@@ -909,6 +909,7 @@ _fix_all_corners(){
     local i
     local j
     local n
+    local k
     local retval
     local fix_retval
     local html_report
@@ -917,6 +918,7 @@ _fix_all_corners(){
     local get_request
     local get_response
     local get_ms
+    local array_allfix_http_response
 
     fixed_server=$1
     nn=`$JQ_CMD '.cloudcoin[].nn' $testcoin | tr -d '"'`
@@ -984,6 +986,7 @@ _fix_all_corners(){
             ((n++))
         done
         
+        http_response=""
         if [ $Fix_ticket_retval -eq 0 ]; then
             sleep 1
             raida="raida$fixed_server"
@@ -1006,12 +1009,14 @@ _fix_all_corners(){
 
             if [ "$status" != "success" ];then
                 fix_retval=1
+                array_allfix_http_response+=("$http_response")
             fi
 
         else
             fix_retval=1
             status="empty ticket"
             elapsed=0
+            array_allfix_http_response+=("${status}") 
 
         fi
         
@@ -1034,6 +1039,11 @@ _fix_all_corners(){
         #   Fix_htmlreport "$html_report" "$raida_node" "$c" "$get_status" "$get_request" "$get_response" "$get_ms"
         #fi  
 
+    done
+
+    for k in "${array_allfix_http_response[@]}"
+    do
+        printf "  %-20b \n" "--> ${_RED_}$k${_REST_}"
     done
 
 }
