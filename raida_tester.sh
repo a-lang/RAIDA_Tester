@@ -9,7 +9,7 @@
 #
 
 # Variables
-version="180614"
+version="180616"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
 raida_nums=25
@@ -81,14 +81,16 @@ Show_menu(){
     cat <<EOF
 ===================================
 RAIDA Tester Commands Available:
-[+] echo         (e)
-[+] detect       (d)
-[+] get_ticket   (g)
-[+] hints        (h)
-[+] fix          (f)
-[+] multi_detect (md)
-[+] advanced     (a)
-[+] quit         (q)
+[+] echo             (e)
+[+] detect           (d)
+[+] get_ticket       (g)
+[+] hints            (h)
+[+] fix              (f)
+[+] multi_detect     (md)
+[+] multi_get_ticket (mg)
+[+] multi_hints      (mh)
+[+] advanced         (a)
+[+] quit             (q)
 EOF
 
 }
@@ -137,7 +139,13 @@ Main()
             Process_request _fix
 
         elif [ "$input" == "multi_detect" -o "$input" == "md" ];then
-            Process_request _multi_detect    
+            Process_request _multi_detect
+
+        elif [ "$input" == "multi_get_ticket" -o "$input" == "mg" ];then
+            Process_request _multi_get_ticket
+
+        elif [ "$input" == "multi_hints" -o "$input" == "mh" ];then
+            Process_request _multi_hints    
 
         elif [ "$input" == "advanced" -o "$input" == "a" ];then
             Advanced
@@ -248,7 +256,13 @@ Process_request(){
         ;;
         _multi_detect)
         PROMPT="MULTI_DETECT"
-        ;; 
+        ;;
+        _multi_get_ticket)
+        PROMPT="MULTI_GET_TICKET"
+        ;;
+        _multi_hints)
+        PROMPT="MULTI_HINTS"
+        ;;  
         *)
         PROMPT="XXX"
         ;;
@@ -644,6 +658,8 @@ _all_hints(){
 
 _hints(){
     local input
+    local _sn
+    local _ms
     hints_retval=0
     ret_hints_ms=99999999
     hints_response=""
@@ -654,53 +670,26 @@ _hints(){
     [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
 
     input="$1"
-    raida="raida$input"
-    nn=`$JQ_CMD '.cloudcoin[].nn' $testcoin | tr -d '"'`
-    sn=`$JQ_CMD '.cloudcoin[].sn' $testcoin | tr -d '"'`
-    string_an=`$JQ_CMD -r '.cloudcoin[].an[]' $testcoin`
-    array_an=( $string_an )
-    an="${array_an[$input]}"
-    denom=$(Get_denom $sn)
-    raida_url="https://$raida.cloudcoin.global/service/get_ticket"
-    raida_url="$raida_url?nn=$nn&sn=$sn&an=$an&pan=$an&denomination=$denom"
-
-    ## Test the Echo
-    #_echo $input >/dev/null 2>&1
-    #run_echo=$?
-    #if [ $run_echo -eq 1 ];then
-    #    Error "$error_05"
-    #    status="ECHO Failed"
-    #    hints_response="$status"
-    #    return 1
-    #fi 
-
-    ## Test the Detect
-    #_detect $input >/dev/null 2>&1
-    #run_detect=$?
-    #if [ $run_detect -eq 1 ];then
-    #    Error "$error_06"
-    #    status="DETECT Failed"
-    #    hints_response="$status"
-    #    return 1
-    #fi 
 
     # Test the Get_ticket
-    _get_ticket $input >/dev/null 2>&1
-    run_get_ticket=$?
-    if [ $run_get_ticket -eq 1 ];then
-        Error "$error_07"
-        status="Get Ticket Failed"
-        hints_response="$status"
-        return 1
-    fi 
+    #_get_ticket $input >/dev/null 2>&1
+    #run_get_ticket=$?
+    #if [ $run_get_ticket -eq 1 ];then
+    #    Error "$error_07"
+    #    status="Get Ticket Failed"
+    #    hints_response="$status"
+    #    return 1
+    #fi 
 
+    # Get the ticket
     echo "$string_03"
-    Hints_ticket_request $raida_url
+    Hints_ticket_request $input
     Hints_ticket_retval=$?
     
             
     if [ $Hints_ticket_retval -eq 0 ]; then
         echo "Last ticket is: $ticket"
+        raida="raida$input"
         raida_url="https://$raida.cloudcoin.global/service/hints"
         raida_url="$raida_url?rn=$ticket"
         start_s=$(Timer)
@@ -1174,9 +1163,223 @@ _multi_detect(){
 }
 
 
+_multi_get_ticket(){
+    unset array_nn
+    unset array_sn
+    unset array_an
+    unset array_denom
+    local input
+    local raida
+    local raida_url
+
+    # Check the testcoin file
+    Load_testcoin_multi
+    is_testcoin=$?
+    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+
+    input="$1"
+    raida="raida$input"
+    raida_url="https://$raida.cloudcoin.global/service/multi_get_ticket"
+    nn=`$JQ_CMD -r '.cloudcoin[].nn' $testcoin_multi`
+    sn=`$JQ_CMD -r '.cloudcoin[].sn' $testcoin_multi`
+    an=`$JQ_CMD -r ".cloudcoin[].an[$input]" $testcoin_multi`
+    array_nn=( $nn )
+    array_sn=( $sn )
+    array_an=( $an )
+
+    for s in "${array_sn[@]}"
+    do
+        array_denom+=( "$(Get_denom $s)" )
+    done
+
+    #echo "nn = ${array_nn[@]}"
+    #echo "sn = ${array_sn[@]}"
+    #echo "an = ${array_an[@]}"
+    #echo "denom = ${array_denom[@]}"
+
+    # Test the Echo
+    test_echo=$(_echo $input)
+    run_echo=$?
+    if [ $run_echo -eq 1 ];then
+        Error "$error_05"
+        return 1
+    fi 
+
+    index=0
+    for n in "${array_nn[@]}"
+    do
+        if [ $index -eq 0 ];then
+            post_nns="nns[]=$n"
+        else
+            post_nns="$post_nns&nns[]=$n"
+        fi
+        ((index++))
+    done
+
+    index=0
+    for s in "${array_sn[@]}"
+    do
+        if [ $index -eq 0 ];then
+            post_sns="sns[]=$s"
+        else
+            post_sns="$post_sns&sns[]=$s"
+        fi
+        ((index++))
+    done
+    
+    index=0
+    for a in "${array_an[@]}"
+    do
+        if [ $index -eq 0 ];then
+            post_ans="ans[]=$a"
+            post_pans="pans[]=$a"
+        else
+            post_ans="$post_ans&ans[]=$a"
+            post_pans="$post_pans&pans[]=$a"
+        fi
+        ((index++))
+    done
+
+    index=0
+    for d in "${array_denom[@]}"
+    do
+        if [ $index -eq 0 ];then
+            post_denoms="denomination[]=$d"
+        else
+            post_denoms="$post_denoms&denomination[]=$d"
+        fi
+        ((index++))
+    done
+
+    post_data="$post_nns&$post_sns&$post_ans&$post_pans&$post_denoms"
+
+    #echo "post_nns = $post_nns"
+    #echo "post_sns = $post_sns"
+    #echo "post_ans = $post_ans"
+    #echo "post_pans = $post_pans"
+    #echo "post_denoms = $post_denoms"
+    #echo "post_data = $post_data"
+
+    multi_ticket_retval=0
+    start_s=$(Timer)
+    http_response=$($CURL_CMD $CURL_OPT_multi -d "$post_data" $raida_url 2>&1)
+    http_retval=$?
+    end_s=$(Timer)
+    elapsed=$(( (end_s-start_s)/1000000 ))
+
+    if [ $http_retval -eq 0 ];then
+        status=$(echo $http_response | $JQ_CMD -r '.[0].status')
+
+        if [ "$status" == "ticket" ];then
+            response_color="$_GREEN_$http_response$_REST_"
+        else
+            response_color="$_RED_$http_response$_REST_"
+            multi_ticket_retval=1
+            
+        fi
+    else
+        response_color="$_RED_$http_response$_REST_"
+        multi_ticket_retval=1
+    fi
+
+    echo
+    echo "Milliseconds: $elapsed"
+    echo "Request: $raida_url"
+    echo -e "Response: $response_color"
+    echo
+
+    return $multi_ticket_retval
+
+}
+
+
+_multi_hints(){
+    unset array_rn
+    local input
+    local raida
+    local raida_url
+    local i
+    multi_tickets_response=""
+
+
+    # Check the testcoin file
+    Load_testcoin_multi
+    is_testcoin=$?
+    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+
+    input="$1"
+    raida="raida$input"
+    raida_url="https://$raida.cloudcoin.global/service/multi_hints"
+
+    # Get the tickets
+    _multi_get_ticket $input >/dev/null 2>&1
+    run_multi_get_ticket=$?
+    if [ $run_multi_get_ticket -eq 1 ];then
+        Error "$error_07"
+        status="Get Ticket Failed"
+        return 1
+    fi 
+    multi_tickets_response="$http_response"
+    rns=$(echo $multi_tickets_response | $JQ_CMD -r '.[].message')
+    array_rn=( $rns )
+
+    #echo "rn = ${array_rn[@]}"
+
+    index=0
+    for i in "${array_rn[@]}"
+    do
+        if [ $index -eq 0 ];then
+            post_rns="rns[]=$i"
+        else
+            post_rns="$post_rns&rns[]=$i"
+        fi
+        ((index++))
+    done
+    
+    post_data="$post_rns"
+
+    #echo $post_rns
+
+    multi_hints_retval=0
+    start_s=$(Timer)
+    http_response=$($CURL_CMD $CURL_OPT_multi -d "$post_data" $raida_url 2>&1)
+    http_retval=$?
+    end_s=$(Timer)
+    elapsed=$(( (end_s-start_s)/1000000 ))
+
+    if [ $http_retval -eq 0 ];then
+        response_color="$_GREEN_$http_response$_REST_"
+    else
+        response_color="$_RED_$http_response$_REST_"
+        multi_hints_retval=1
+    fi
+
+    echo
+    echo "Milliseconds: $elapsed"
+    echo "Request: $raida_url"
+    echo -e "Response: $response_color"
+    echo
+
+    return $multi_hints_retval
+
+}
+
 
 Hints_ticket_request(){
-    raida_url="$1"
+    local input
+    local raida
+    local raida_url
+
+    input="$1"
+    raida="raida$input"
+    raida_url="https://$raida.cloudcoin.global/service/get_ticket"
+    nn=`$JQ_CMD '.cloudcoin[].nn' $testcoin | tr -d '"'`
+    sn=`$JQ_CMD '.cloudcoin[].sn' $testcoin | tr -d '"'`
+    string_an=`$JQ_CMD -r '.cloudcoin[].an[]' $testcoin`
+    array_an=( $string_an )
+    an="${array_an[$input]}"
+    denom=$(Get_denom $sn)
+    raida_url="$raida_url?nn=$nn&sn=$sn&an=$an&pan=$an&denomination=$denom"
     http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
     is_raida=$(echo $http_response | grep -c "server")
 
@@ -1209,6 +1412,7 @@ Hints_ticket_request(){
 
     fi
 }
+
 
 Fix_ticket_request(){
     raida_url="$1"
