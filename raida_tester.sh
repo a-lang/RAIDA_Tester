@@ -9,7 +9,7 @@
 #
 
 # Variables
-version="180616"
+version="180617"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
 raida_nums=25
@@ -750,7 +750,8 @@ _all_fix(){
     #[ $retval -eq 1 ] && return 1 # html template file not found
 
     echo
-    echo "FIX Results: [Fix1][Fix2][Fix3][Fix4] "
+    #echo "FIX Results: [Fix1][Fix2][Fix3][Fix4] "
+    printf " %.18s %30s \n" "FIX Results:" "[Fix1][Fix2][Fix3][Fix4]"
     for ((n=0;n<$raida_nums;n++))
     do
         #echo -n "-> RAIDA#${n}: "
@@ -1011,10 +1012,10 @@ _fix_all_corners(){
         
         if [ $fix_retval -eq 0 ];then
             #[ $c -eq 4 ] && echo "pass" || echo -n "pass,"
-            [ $c -eq 4 ] && echo "[pass]" || echo -n "[pass]"
+            [ $c -eq 4 ] && echo " PASS " || echo -n " PASS "
         else
             #[ $c -eq 4 ] && echo -e "${_RED_}fail${_REST_}" || echo -e -n "${_RED_}fail${_REST_},"
-            [ $c -eq 4 ] && echo -e "[${_RED_}fail${_REST_}]" || echo -e -n "[${_RED_}fail${_REST_}]"
+            [ $c -eq 4 ] && echo -e "${_RED_}*FAIL*${_REST_}" || echo -e -n "${_RED_}*FAIL*${_REST_}"
         fi
 
         #if [ "$save_to_html" == "YES" ];then
@@ -1032,7 +1033,8 @@ _fix_all_corners(){
 
     for k in "${array_allfix_http_response[@]}"
     do
-        printf "  %-20b \n" "--> ${_RED_}$k${_REST_}"
+        #printf "   %-20b \n" "[!]: ${_RED_}$k${_REST_}"
+        Output2 "$k"
     done
 
 }
@@ -1691,7 +1693,7 @@ Output(){
 Output2(){
     local msg
     msg=$1
-    printf "  %-20b \n" "--> ${_RED_}$msg${_REST_}"
+    printf "  %-20b \n" "-[!]:${_RED_}$msg${_REST_}"
 }
 
 Get_version(){
