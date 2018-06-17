@@ -822,12 +822,8 @@ _fix(){
 
             for i in ${array_trusted_servers[@]}
             do
-                raida="raida$i"
                 an="${array_an[$i]}"
-                raida_url="https://$raida.cloudcoin.global/service/get_ticket"
-                raida_url="$raida_url?nn=$nn&sn=$sn&toserver=$fixed_server&an=$an&pan=$an&denomination=$denom"
-                
-                Fix_ticket_request $raida_url
+                Fix_ticket_request $i $nn $sn $fixed_server $an $denom
                 retval=$?
 
                 if [ $retval -eq 0 ];then
@@ -955,12 +951,8 @@ _fix_all_corners(){
 
         for i in ${array_trusted_servers[@]}
         do
-            raida="raida$i"
             an="${array_an[$i]}"
-            raida_url="https://$raida.cloudcoin.global/service/get_ticket"
-            raida_url="$raida_url?nn=$nn&sn=$sn&toserver=$fixed_server&an=$an&pan=$an&denomination=$denom"
-                
-            Fix_ticket_request $raida_url >/dev/null 2>&1
+            Fix_ticket_request $i $nn $sn $fixed_server $an $denom >/dev/null 2>&1
             retval=$?
 
             if [ $retval -eq 0 ];then
@@ -1173,6 +1165,7 @@ _multi_get_ticket(){
     local input
     local raida
     local raida_url
+    multi_tickets_response=""
 
     # Check the testcoin file
     Load_testcoin_multi
@@ -1290,6 +1283,7 @@ _multi_get_ticket(){
     echo -e "Response: $response_color"
     echo
 
+    multi_tickets_response=$http_response
     return $multi_ticket_retval
 
 }
@@ -1301,7 +1295,6 @@ _multi_hints(){
     local raida
     local raida_url
     local i
-    multi_tickets_response=""
 
 
     # Check the testcoin file
@@ -1313,7 +1306,8 @@ _multi_hints(){
     raida="raida$input"
     raida_url="https://$raida.cloudcoin.global/service/multi_hints"
 
-    # Get the tickets
+    # _multi_get_ticket will return $multi_tickets_response
+    # 
     _multi_get_ticket $input >/dev/null 2>&1
     run_multi_get_ticket=$?
     if [ $run_multi_get_ticket -eq 1 ];then
@@ -1321,7 +1315,7 @@ _multi_hints(){
         status="Get Ticket Failed"
         return 1
     fi 
-    multi_tickets_response="$http_response"
+    
     rns=$(echo $multi_tickets_response | $JQ_CMD -r '.[].message')
     array_rn=( $rns )
 
@@ -1417,7 +1411,18 @@ Hints_ticket_request(){
 
 
 Fix_ticket_request(){
-    raida_url="$1"
+    local raida raida_url
+    local nn sn toserver an denom
+
+    raida="raida$1"
+    nn="$2"
+    sn="$3"
+    toserver="$4"
+    an="$5"
+    denom="$6"
+    raida_url="https://$raida.cloudcoin.global/service/get_ticket"
+    raida_url="$raida_url?nn=$nn&sn=$sn&toserver=$toserver&an=$an&pan=$an&denomination=$denom"
+
     http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
     is_raida=$(echo $http_response | grep -c "server")
     ticket=""
@@ -1449,7 +1454,9 @@ Fix_ticket_request(){
         return 1
 
     fi
+
 }
+
 
 Load_testcoin(){
     if [ -f $testcoin ];then
