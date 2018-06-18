@@ -9,7 +9,7 @@
 #
 
 # Variables
-version="180617"
+version="180618"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
 raida_nums=25
@@ -203,9 +203,10 @@ Advanced(){
     while true
     do
         echo "Test All RAIDA Nodes [0-5]: 1.Echo 2.Detect 3.Ticket 4.Hints 5.Fix q.Exit"
+        echo "                            6.Multi_Detect  7.Get_Ticket"
         echo "NOTE: This process may take a few mins to check all nodes please be patient until all checks done."
         echo -n "$PROMPT> " && read input
-        if [ $input -ge 1 -a $input -le 5 ] 2>/dev/null ;then
+        if [ $input -ge 1 -a $input -le 7 ] 2>/dev/null ;then
             case "$input" in
                 1)
                      _all_echo
@@ -221,6 +222,12 @@ Advanced(){
                     ;;
                 5)
                     _all_fix
+                    ;; 
+                6)
+                    _all_multi_detect
+                    ;;
+                7)
+                    _all_multi_get_ticket
                     ;;
             esac
 
@@ -1031,11 +1038,44 @@ _fix_all_corners(){
 
 }
 
+
+_all_multi_detect(){
+    local n run    
+
+    # Check the testcoin file
+    Load_testcoin_multi
+    is_testcoin=$?
+    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+
+    echo "MULTI_DETECT Results: "
+    for ((n=0;n<$raida_nums;n++))
+    do
+        _multi_detect $n >/dev/null 2>&1
+        run=$?
+        if [ $run -eq 0 ];then
+            result="PASS"
+        else
+            result="${_RED_}FAIL${_REST_}"
+        fi 
+
+        Output $n "$result" $multi_detect_elapsed
+
+        if [ "$result" != "PASS" ];then
+            Output2 "$mult_detect_response"
+        fi
+
+    done
+    echo;echo
+
+}
+
 _multi_detect(){
     unset array_nn
     unset array_sn
     unset array_an
     unset array_denom
+    local s n a d 
+    mult_detect_response=""
 
     # Check the testcoin file
     Load_testcoin_multi
@@ -1067,6 +1107,7 @@ _multi_detect(){
     run_echo=$?
     if [ $run_echo -eq 1 ];then
         Error "$error_05"
+        mult_detect_response="$error_05"
         return 1
     fi 
 
@@ -1153,7 +1194,40 @@ _multi_detect(){
     echo -e "Response: $response_color"
     echo
 
+    mult_detect_response="$http_response"
+    multi_detect_elapsed=$elapsed
     return $detect_retval
+}
+
+
+_all_multi_get_ticket(){
+    local n run    
+
+    # Check the testcoin file
+    Load_testcoin_multi
+    is_testcoin=$?
+    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+
+    echo "MULTI_GET_TICKET Results: "
+    for ((n=0;n<$raida_nums;n++))
+    do
+        _multi_get_ticket $n >/dev/null 2>&1
+        run=$?
+        if [ $run -eq 0 ];then
+            result="PASS"
+        else
+            result="${_RED_}FAIL${_REST_}"
+        fi 
+
+        Output $n "$result" $multi_tickets_elapsed
+
+        if [ "$result" != "PASS" ];then
+            Output2 "$multi_tickets_response"
+        fi
+
+    done
+    echo;echo
+
 }
 
 
@@ -1162,9 +1236,8 @@ _multi_get_ticket(){
     unset array_sn
     unset array_an
     unset array_denom
-    local input
-    local raida
-    local raida_url
+    local input raida raida_url
+    local k n s a d 
     multi_tickets_response=""
 
     # Check the testcoin file
@@ -1182,9 +1255,9 @@ _multi_get_ticket(){
     array_sn=( $sn )
     array_an=( $an )
 
-    for s in "${array_sn[@]}"
+    for k in "${array_sn[@]}"
     do
-        array_denom+=( "$(Get_denom $s)" )
+        array_denom+=( "$(Get_denom $k)" )
     done
 
     #echo "nn = ${array_nn[@]}"
@@ -1197,6 +1270,7 @@ _multi_get_ticket(){
     run_echo=$?
     if [ $run_echo -eq 1 ];then
         Error "$error_05"
+        multi_tickets_response="$error_05"
         return 1
     fi 
 
@@ -1283,7 +1357,8 @@ _multi_get_ticket(){
     echo -e "Response: $response_color"
     echo
 
-    multi_tickets_response=$http_response
+    multi_tickets_response="$http_response"
+    multi_tickets_elapsed=$elapsed
     return $multi_ticket_retval
 
 }
@@ -1693,7 +1768,6 @@ Output(){
     node=$1
     status="$2"
     ms=$3
-    #printf " %.18s [%b] (%dms)\n" "RAIDA($node).............." "$status" $ms
     printf " %.18s [%4b] (%4ims) \n" "RAIDA($node).............." "$status" $ms
 }
 
