@@ -9,7 +9,7 @@
 #
 
 # Variables
-version="180618"
+version="180621"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
 raida_nums=25
@@ -203,7 +203,7 @@ Advanced(){
     while true
     do
         echo "Test All RAIDA Nodes [0-5]: 1.Echo 2.Detect 3.Ticket 4.Hints 5.Fix q.Exit"
-        echo "                            6.Multi_Detect  7.Get_Ticket"
+        echo "                            6.Multi_Detect  7.Multi_Ticket"
         echo "NOTE: This process may take a few mins to check all nodes please be patient until all checks done."
         echo -n "$PROMPT> " && read input
         if [ $input -ge 1 -a $input -le 7 ] 2>/dev/null ;then
@@ -1774,7 +1774,7 @@ Output(){
 Output2(){
     local msg
     msg=$1
-    printf "  %-20b \n" "-[!]:${_RED_}$msg${_REST_}"
+    printf "  %-20b \n" "[!]:${_RED_}$msg${_REST_}"
 }
 
 Get_version(){
