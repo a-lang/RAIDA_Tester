@@ -9,7 +9,7 @@
 #
 
 # Variables
-version="180621"
+version="180623"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
 raida_nums=25
@@ -1208,7 +1208,7 @@ _all_multi_get_ticket(){
     is_testcoin=$?
     [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
 
-    echo "MULTI_GET_TICKET Results: "
+    echo "MULTI_TICKET Results: "
     for ((n=0;n<$raida_nums;n++))
     do
         _multi_get_ticket $n >/dev/null 2>&1
@@ -1774,7 +1774,7 @@ Output(){
 Output2(){
     local msg
     msg=$1
-    printf "  %-20b \n" "[!]:${_RED_}$msg${_REST_}"
+    printf "   %-20b \n" "[!]:${_RED_}$msg${_REST_}"
 }
 
 Get_version(){
