@@ -9,7 +9,7 @@
 #
 
 # Variables
-version="180623"
+version="180704"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
 raida_nums=25
@@ -89,6 +89,8 @@ RAIDA Tester Commands Available:
 [+] multi_detect     (md)
 [+] multi_get_ticket (mg)
 [+] multi_hints      (mh)
+[+] multi_fix3       (mf)
+[+] multi_fix4       (mf4)
 [+] advanced         (a)
 [+] quit             (q)
 EOF
@@ -145,7 +147,15 @@ Main()
             Process_request _multi_get_ticket
 
         elif [ "$input" == "multi_hints" -o "$input" == "mh" ];then
-            Process_request _multi_hints    
+            Process_request _multi_hints
+
+        elif [ "$input" == "multi_fix3" -o "$input" == "mf" ];then
+            isFix4Mode="false"
+            Process_request _multi_fix
+
+        elif [ "$input" == "multi_fix4" -o "$input" == "mf4" ];then
+            isFix4Mode="true"
+            Process_request _multi_fix      
 
         elif [ "$input" == "advanced" -o "$input" == "a" ];then
             Advanced
@@ -269,7 +279,14 @@ Process_request(){
         ;;
         _multi_hints)
         PROMPT="MULTI_HINTS"
-        ;;  
+        ;;
+        _multi_fix)
+        if [ "$isFix4Mode" = "true" ];then
+            PROMPT="MULTI_FIX4"
+        else
+            PROMPT="MULTI_FIX3"
+        fi
+        ;;   
         *)
         PROMPT="XXX"
         ;;
@@ -819,7 +836,7 @@ _fix(){
     input=""
     while true
     do
-        echo "What RAIDA triad do you want to use? 1.Upper-Left, 2.Upper-Right, 3.Lower-Left, 4.Lower-Right"
+        echo "What RAIDA corners do you want to use? 1.Upper-Left, 2.Upper-Right, 3.Lower-Left, 4.Lower-Right"
         echo -n "> " && read input
         if [ $input -gt 0 -a $input -lt 5  ];then
             array_name="array_fix_corner$input"
@@ -1238,6 +1255,7 @@ _multi_get_ticket(){
     unset array_denom
     local input raida raida_url
     local k n s a d 
+    local post_nns post_sns post_ans post_pans post_denoms post_data 
     multi_tickets_response=""
 
     # Check the testcoin file
@@ -1393,7 +1411,6 @@ _multi_hints(){
     
     rns=$(echo $multi_tickets_response | $JQ_CMD -r '.[].message')
     array_rn=( $rns )
-
     #echo "rn = ${array_rn[@]}"
 
     index=0
@@ -1408,7 +1425,6 @@ _multi_hints(){
     done
     
     post_data="$post_rns"
-
     #echo $post_rns
 
     multi_hints_retval=0
@@ -1435,6 +1451,168 @@ _multi_hints(){
 
 }
 
+
+_multi_fix(){
+    local a i n j d input notes
+    local post_pans post_messages post_nns post_fromservers post_data 
+
+    unset array_fix_corner1
+    unset array_fix_corner2
+    unset array_fix_corner3
+    unset array_fix_corner4
+
+    # Check the testcoin file
+    Load_testcoin_multi
+    is_testcoin=$?
+    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+
+    fixed_server=$1
+    nn=`$JQ_CMD -r '.cloudcoin[].nn' $testcoin_multi`
+    sn=`$JQ_CMD -r '.cloudcoin[].sn' $testcoin_multi`
+    an=`$JQ_CMD -r ".cloudcoin[].an[$fixed_server]" $testcoin_multi`
+    array_nn=( $nn )
+    array_sn=( $sn )
+    array_an=( $an )
+
+    array_fix_corner1[1]=$(( fixed_server - 6))
+    array_fix_corner1[2]=$(( fixed_server - 5))
+    array_fix_corner1[3]=$(( fixed_server - 1))
+    array_fix_corner2[1]=$(( fixed_server - 5))
+    array_fix_corner2[2]=$(( fixed_server - 4))
+    array_fix_corner2[3]=$(( fixed_server + 1))
+    array_fix_corner3[1]=$(( fixed_server - 1))
+    array_fix_corner3[2]=$(( fixed_server + 4))
+    array_fix_corner3[3]=$(( fixed_server + 5))
+    array_fix_corner4[1]=$(( fixed_server + 1))
+    array_fix_corner4[2]=$(( fixed_server + 5))
+    array_fix_corner4[3]=$(( fixed_server + 6))
+
+    if [ "$isFix4Mode" = "true" ];then
+        array_fix_corner1[4]=$(( fixed_server + 6))
+        array_fix_corner2[4]=$(( fixed_server + 4))
+        array_fix_corner3[4]=$(( fixed_server + 5))
+        array_fix_corner4[4]=$(( fixed_server + 6))
+    fi    
+
+    for ((i=1;i<=4;i++))
+    do
+        array_name="array_fix_corner$i"
+        n=1
+        for j in $(eval echo \${$array_name[@]})
+        do
+            if [ $j -lt 0 ];then
+                eval $array_name[$n]=$(( $j + 25))
+            elif [ $j -gt 24 ];then
+                eval $array_name[$n]=$(( $j - 25))
+            fi
+            ((n++))
+        done
+    done
+
+    input=""
+    while true
+    do
+        echo "What RAIDA corners do you want to use? 1.Upper-Left, 2.Upper-Right, 3.Lower-Left, 4.Lower-Right"
+        echo -n "> " && read input
+        if [ $input -gt 0 -a $input -lt 5  ];then
+            array_name="array_fix_corner$input"
+            array_trusted_servers=$(eval echo \${$array_name[@]})
+            n=1
+            post_messages=""
+            post_nns=""
+            post_pans=""
+            post_fromservers=""
+            #echo "array_name = ${array_name[@]}"
+            #echo "array_trusted_servers = ${array_trusted_servers[@]}"
+
+            index=0
+            for a in "${array_an[@]}"
+            do
+                if [ $index -eq 0 ];then
+                    post_pans="pans[]=$a"
+                else
+                    post_pans="$post_pans&pans[]=$a"
+                fi
+                ((index++))
+            done
+
+            for i in ${array_trusted_servers[@]}
+            do
+                _multi_get_ticket $i >/dev/null 2>&1
+                run_multi_get_ticket=$?
+                if [ $run_multi_get_ticket -eq 1 ];then
+                    Error "$error_07"
+                    status="Get Ticket Failed"
+                    return 1
+                fi 
+
+                tickets=$(echo $multi_tickets_response | $JQ_CMD -r '.[].message')
+                array_tickets=( $tickets )
+                #echo "array_tickets = ${array_tickets[@]}"
+
+                notes=0
+                for d in "${array_tickets[@]}"
+                do
+                    if [ $n -eq 1 -a $notes -eq 0 ];then
+                        post_fromservers="fromserver$n[]=$i"
+                        post_messages="message${n}[]=${d}"
+                    else
+                        post_fromservers="$post_fromservers&fromserver$n[]=$i"
+                        post_messages="${post_messages}&message${n}[]=${d}"
+                    fi
+
+                    ((notes++))
+                done
+
+                ((n++))
+            done
+
+            post_data="$post_fromservers&$post_messages&$post_pans"
+            #echo "post_fromservers = $post_fromservers"
+            #echo "post_messages = $post_messages"
+            #echo "post_pans = $post_pans"
+            #echo "post_data = $post_data"
+
+            raida="raida$fixed_server"
+            raida_url="https://$raida.cloudcoin.global/service/multi_fix"
+            multi_fix_retval=0
+            start_s=$(Timer)
+            http_response=$($CURL_CMD $CURL_OPT_multi -d "$post_data" $raida_url 2>&1)
+            http_retval=$?
+            end_s=$(Timer)
+            elapsed=$(( (end_s-start_s)/1000000 ))
+            
+            if [ $http_retval -eq 0 ];then
+                status=$(echo $http_response | $JQ_CMD -r '.[0].status')
+        
+                if [ "$status" == "success" ];then
+                    response_color="$_GREEN_$http_response$_REST_"
+                else
+                    response_color="$_RED_$http_response$_REST_"
+                    multi_fix_retval=1
+                    
+                fi
+            else
+                response_color="$_RED_$http_response$_REST_"
+                multi_fix_retval=1
+            fi
+            
+            echo
+            echo "Milliseconds: $elapsed"
+            echo "Request: $raida_url"
+            echo "Post Data: $post_data"
+            echo -e "Response: $response_color"
+            echo
+
+
+            break
+        else
+            Error "$error_02"
+        fi
+
+    done
+
+}
 
 Hints_ticket_request(){
     local input
@@ -1496,7 +1674,8 @@ Fix_ticket_request(){
     an="$5"
     denom="$6"
     raida_url="https://$raida.cloudcoin.global/service/get_ticket"
-    raida_url="$raida_url?nn=$nn&sn=$sn&toserver=$toserver&an=$an&pan=$an&denomination=$denom"
+    #raida_url="$raida_url?nn=$nn&sn=$sn&toserver=$toserver&an=$an&pan=$an&denomination=$denom"
+    raida_url="$raida_url?nn=$nn&sn=$sn&an=$an&pan=$an&denomination=$denom"
 
     http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
     is_raida=$(echo $http_response | grep -c "server")
