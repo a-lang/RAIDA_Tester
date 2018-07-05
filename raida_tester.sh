@@ -9,7 +9,7 @@
 #
 
 # Variables
-version="180704"
+version="180705"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
 raida_nums=25
@@ -837,7 +837,7 @@ _fix(){
     while true
     do
         echo "What RAIDA corners do you want to use? 1.Upper-Left, 2.Upper-Right, 3.Lower-Left, 4.Lower-Right"
-        echo -n "> " && read input
+        echo -n "Corner> " && read input
         if [ $input -gt 0 -a $input -lt 5  ];then
             array_name="array_fix_corner$input"
             array_trusted_servers=$(eval echo \${$array_name[@]})
@@ -1480,18 +1480,18 @@ _multi_fix(){
     array_fix_corner2[1]=$(( fixed_server - 5))
     array_fix_corner2[2]=$(( fixed_server - 4))
     array_fix_corner2[3]=$(( fixed_server + 1))
-    array_fix_corner3[1]=$(( fixed_server - 1))
+    array_fix_corner3[1]=$(( fixed_server + 5))
     array_fix_corner3[2]=$(( fixed_server + 4))
-    array_fix_corner3[3]=$(( fixed_server + 5))
-    array_fix_corner4[1]=$(( fixed_server + 1))
+    array_fix_corner3[3]=$(( fixed_server - 1))
+    array_fix_corner4[1]=$(( fixed_server + 6))
     array_fix_corner4[2]=$(( fixed_server + 5))
-    array_fix_corner4[3]=$(( fixed_server + 6))
+    array_fix_corner4[3]=$(( fixed_server + 1))
 
     if [ "$isFix4Mode" = "true" ];then
         array_fix_corner1[4]=$(( fixed_server + 6))
         array_fix_corner2[4]=$(( fixed_server + 4))
-        array_fix_corner3[4]=$(( fixed_server + 5))
-        array_fix_corner4[4]=$(( fixed_server + 6))
+        array_fix_corner3[4]=$(( fixed_server - 4))
+        array_fix_corner4[4]=$(( fixed_server - 6))
     fi    
 
     for ((i=1;i<=4;i++))
@@ -1513,7 +1513,7 @@ _multi_fix(){
     while true
     do
         echo "What RAIDA corners do you want to use? 1.Upper-Left, 2.Upper-Right, 3.Lower-Left, 4.Lower-Right"
-        echo -n "> " && read input
+        echo -n "Corner> " && read input
         if [ $input -gt 0 -a $input -lt 5  ];then
             array_name="array_fix_corner$input"
             array_trusted_servers=$(eval echo \${$array_name[@]})
