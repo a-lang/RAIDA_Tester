@@ -9,7 +9,7 @@
 #
 
 # Variables
-version="180705"
+version="180711"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
 raida_nums=25
@@ -89,8 +89,6 @@ RAIDA Tester Commands Available:
 [+] multi_detect     (md)
 [+] multi_get_ticket (mg)
 [+] multi_hints      (mh)
-[+] multi_fix3       (mf)
-[+] multi_fix4       (mf4)
 [+] advanced         (a)
 [+] quit             (q)
 EOF
@@ -149,13 +147,13 @@ Main()
         elif [ "$input" == "multi_hints" -o "$input" == "mh" ];then
             Process_request _multi_hints
 
-        elif [ "$input" == "multi_fix3" -o "$input" == "mf" ];then
-            isFix4Mode="false"
-            Process_request _multi_fix
+        #elif [ "$input" == "multi_fix3" -o "$input" == "mf" ];then
+        #    isFix4Mode="false"
+        #    Process_request _multi_fix
 
-        elif [ "$input" == "multi_fix4" -o "$input" == "mf4" ];then
-            isFix4Mode="true"
-            Process_request _multi_fix      
+        #elif [ "$input" == "multi_fix4" -o "$input" == "mf4" ];then
+        #    isFix4Mode="true"
+        #    Process_request _multi_fix      
 
         elif [ "$input" == "advanced" -o "$input" == "a" ];then
             Advanced
@@ -280,13 +278,13 @@ Process_request(){
         _multi_hints)
         PROMPT="MULTI_HINTS"
         ;;
-        _multi_fix)
-        if [ "$isFix4Mode" = "true" ];then
-            PROMPT="MULTI_FIX4"
-        else
-            PROMPT="MULTI_FIX3"
-        fi
-        ;;   
+        #_multi_fix)
+        #if [ "$isFix4Mode" = "true" ];then
+        #    PROMPT="MULTI_FIX4"
+        #else
+        #    PROMPT="MULTI_FIX3"
+        #fi
+        #;;   
         *)
         PROMPT="XXX"
         ;;
