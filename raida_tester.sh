@@ -9,11 +9,13 @@
 #
 
 # Variables
-version="180711"
+version="180729"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
+testcoinfile3="testcoin_800.stack"
 raida_nums=25
 max_latency=15
+max_post_notes=400
 _REST_='\033[0m'
 _GREEN_='\033[32m'
 _RED_='\033[31m'
@@ -87,6 +89,7 @@ RAIDA Tester Commands Available:
 [+] hints            (h)
 [+] fix              (f)
 [+] multi_detect     (md)
+[+] multi_detect+    (md2)
 [+] multi_get_ticket (mg)
 [+] multi_hints      (mh)
 [+] advanced         (a)
@@ -140,6 +143,9 @@ Main()
 
         elif [ "$input" == "multi_detect" -o "$input" == "md" ];then
             Process_request _multi_detect
+
+        elif [ "$input" == "multi_detect+" -o "$input" == "md2" ];then
+            Process_request _multi_detect2
 
         elif [ "$input" == "multi_get_ticket" -o "$input" == "mg" ];then
             Process_request _multi_get_ticket
@@ -271,6 +277,9 @@ Process_request(){
         ;;
         _multi_detect)
         PROMPT="MULTI_DETECT"
+        ;;
+        _multi_detect2)
+        PROMPT="MULTI_DETECT+"
         ;;
         _multi_get_ticket)
         PROMPT="MULTI_GET_TICKET"
@@ -1025,29 +1034,15 @@ _fix_all_corners(){
         fi
         
         if [ $fix_retval -eq 0 ];then
-            #[ $c -eq 4 ] && echo "pass" || echo -n "pass,"
             [ $c -eq 4 ] && echo " PASS " || echo -n " PASS "
         else
-            #[ $c -eq 4 ] && echo -e "${_RED_}fail${_REST_}" || echo -e -n "${_RED_}fail${_REST_},"
             [ $c -eq 4 ] && echo -e "${_RED_}*FAIL*${_REST_}" || echo -e -n "${_RED_}*FAIL*${_REST_}"
         fi
-
-        #if [ "$save_to_html" == "YES" ];then
-        #    html_report="fix${c}test.html"
-        #    raida_node=$fixed_server
-        #    get_status="$status"
-        #    get_request="$raida_url"
-        #    get_response="$http_response"
-        #    get_ms="$elapsed"
-
-        #   Fix_htmlreport "$html_report" "$raida_node" "$c" "$get_status" "$get_request" "$get_response" "$get_ms"
-        #fi  
 
     done
 
     for k in "${array_allfix_http_response[@]}"
     do
-        #printf "   %-20b \n" "[!]: ${_RED_}$k${_REST_}"
         Output2 "$k"
     done
 
@@ -1212,6 +1207,160 @@ _multi_detect(){
     mult_detect_response="$http_response"
     multi_detect_elapsed=$elapsed
     return $detect_retval
+}
+
+_multi_detect2(){
+    unset array_nn
+    unset array_sn
+    unset array_an
+    unset array_denom
+    local node raida raida_url input
+    local s n i j 
+    local post_sns post_nns post_ans post_pans post_denoms
+    # Check the testcoin file
+    Load_testcoin_file "$testcoinfile3"
+    is_testcoin=$?
+    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+
+    node="$1"
+    nn=`$JQ_CMD -r '.cloudcoin[].nn' $testcoinfile3`
+    sn=`$JQ_CMD -r '.cloudcoin[].sn' $testcoinfile3`
+    an=`$JQ_CMD -r ".cloudcoin[].an[$node]" $testcoinfile3`
+    array_nn=( $nn )
+    array_sn=( $sn )
+    array_an=( $an )
+
+    for s in "${array_sn[@]}"
+    do
+        array_denom+=( "$(Get_denom $s)" )
+    done
+
+    notes_total=${#array_sn[@]}
+
+    while true
+    do
+        echo -n "How many of the notes to post once (< $max_post_notes or ENTER)? " && read input
+        if [ -z $input ];then
+            notes_post=$max_post_notes
+        else
+            notes_post=$input
+        fi
+
+        if [ $notes_post -gt 0 -a $notes_post -le $max_post_notes ];then
+            detect_round=$(( ($notes_total / $notes_post) + ($notes_total % $notes_post > 0) ))
+            n=0
+            j=0
+            while [ $n -lt $notes_total ]
+            do
+                if [ $((($notes_total - $n + 1))) -gt $notes_post ];then
+                    for ((i=0;i<$notes_post;i++))
+                    do
+                        if [ $i -eq 0 ];then
+                            post_sns="sns[]=${array_sn[$n]}"
+                            post_nns="nns[]=${array_nn[$n]}"
+                            post_ans="ans[]=${array_an[$n]}"
+                            post_pans="pans[]=${array_an[$n]}"
+                            post_denoms="denomination[]=${array_denom[$n]}"
+                            
+                        else
+                            post_sns="$post_sns&sns[]=${array_sn[$n]}"
+                            post_nns="$post_nns&nns[]=${array_nn[$n]}"
+                            post_ans="$post_ans&ans[]=${array_an[$n]}"
+                            post_pans="$post_pans&pans[]=${array_an[$n]}"
+                            post_denoms="$post_denoms&denomination[]=${array_denom[$n]}"
+                        fi
+                        ((n++))
+                    done
+                    #echo "-> $post_sns"
+                    #echo "-> $post_nns"
+                    #echo "-> $post_ans"
+                    #echo "-> $post_pans"
+                    #echo "-> $post_denoms"
+                    post_data="$post_nns&$post_sns&$post_ans&$post_pans&$post_denoms"
+                    _post_multi_dtect "$node" "$post_data" $notes_post
+                else
+                    last_round=$((($notes_total - $n)))
+                    for ((i=0;i<$last_round;i++))
+                    do
+                        if [ $i -eq 0 ];then
+                            post_sns="sns[]=${array_sn[$n]}"
+                            post_nns="nns[]=${array_nn[$n]}"
+                            post_ans="ans[]=${array_an[$n]}"
+                            post_pans="pans[]=${array_an[$n]}"
+                            post_denoms="denomination[]=${array_denom[$n]}"
+                        else
+                            post_sns="$post_sns&sns[]=${array_sn[$n]}"
+                            post_nns="$post_nns&nns[]=${array_nn[$n]}"
+                            post_ans="$post_ans&ans[]=${array_an[$n]}"
+                            post_pans="$post_pans&pans[]=${array_an[$n]}"
+                            post_denoms="$post_denoms&denomination[]=${array_denom[$n]}"
+                        fi
+                        ((n++))
+                    done
+                    #echo "last-> $post_sns"
+                    #echo "last-> $post_nns"
+                    #echo "last-> $post_ans"
+                    #echo "last-> $post_pans"
+                    #echo "last-> $post_denoms"
+                    post_data="$post_nns&$post_sns&$post_ans&$post_pans&$post_denoms"
+                    _post_multi_dtect "$node" "$post_data" $last_round 
+                fi
+            done
+            break
+        fi
+        Error "$error_02"
+    done
+
+}
+
+_post_multi_dtect(){
+    unset array_status
+    local node post_data status s pass_count fail_count
+    local raida raida_url start_s end_s elapsed total_count
+    node="$1"
+    post_data="$2"
+    post_nums=$3
+
+    raida="raida$node"
+    raida_url="https://$raida.cloudcoin.global/service/multi_detect"
+    detect_retval=0
+    start_s=$(Timer)
+    http_response=$($CURL_CMD $CURL_OPT_multi -d "$post_data" $raida_url 2>&1)
+    http_retval=$?
+    end_s=$(Timer)
+    elapsed=$(( (end_s-start_s)/1000000 ))
+    #echo $http_response
+
+    if [ $http_retval -eq 0 ];then
+        status=$(echo $http_response | $JQ_CMD -r '.[].status' 2>&1)
+        status_retval=$?
+
+        if [ $status_retval -eq 0 ];then
+            array_status=( $status )
+            #echo "status -> ${array_status[@]}"
+            
+            total_count=${#array_status[@]}
+            pass_count=0
+            fail_count=0
+            for s in "${array_status[@]}"
+            do
+                [ "$s" == "pass" ] && ((pass_count++))
+                [ "$s" == "fail" ] && ((fail_count++))
+            done
+    
+            printf " -> Posted: %3d | Detected: %3d | Pass: %3d | Fail: %3d (%4ims)\n" $post_nums $total_count $pass_count $fail_count $elapsed
+            return 0
+        else
+            detect_retval=1
+        fi
+    else
+        detect_retval=1
+    fi
+
+    if [ $detect_retval -eq 1 ];then
+        printf " -> Posted: %3d | Detected: ${_RED_}%3d${_REST_} | Pass: ${_RED_}%3d${_REST_} | Fail: ${_RED_}%3d${_REST_}\n" $post_nums 0 0 0
+    fi
+
 }
 
 
@@ -1743,6 +1892,27 @@ Load_testcoin_multi(){
         return 1
     fi
 }
+
+Load_testcoin_file(){
+    local file
+    file="$1"
+
+    if [ -f $file ];then
+        $JQ_CMD '.cloudcoin' $file >/dev/null 2>&1
+        is_json=$? 
+        if [ $is_json -eq 0 ];then # Is JSON
+            echo -e "Loading test coins: $WORKDIR/$file"
+            return 0
+        else # Not JSON
+            Error "Error: Test Coin File seems to be Wrong Format ($WORKDIR/$file)"
+            return 1
+        fi
+    else
+        Error "Error: Testcoin File Not Found ($WORKDIR/$file)"
+        return 1
+    fi
+}
+
 
 Check_html_template(){
     local html_template
