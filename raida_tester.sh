@@ -6,10 +6,11 @@
 #   17/10/14 - Added test for multi_detect
 #   17/10/15 - Added detection for version
 #   18/04/10 - JSON validation for ECHO
+#   19/05/25 - Added datetime for Advanced ECHO 
 #
 
 # Variables
-version="180729"
+version="190525"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
 testcoinfile3="testcoin_800.stack"
@@ -337,7 +338,7 @@ _all_echo(){
         fi
 
         version=$(Get_version $n) 
-        Output $n "v$version|$result" $echo_elapsed
+        Output $n "v$version|time:$echo_datetime|$result" $echo_elapsed
 
         if [ "$result" != "PASS" ];then
             Output2 "$echo_response"
@@ -362,6 +363,7 @@ _echo()
 {
     echo_response=""
     echo_elapsed=0
+    echo_datetime=""
     
     echo_retval=0
     input="$1"
@@ -374,6 +376,7 @@ _echo()
     elapsed=$(( (end_s-start_s)/1000000 ))
 
     if [ $http_retval -eq 0 ]; then
+        datetime=$(echo $http_response | $JQ_CMD -r '.time' 2>/dev/null)
         status=$(echo $http_response | $JQ_CMD -r '.status' 2>/dev/null)
         [ -z $status ] && status="invalid json data"
     else
@@ -399,6 +402,7 @@ _echo()
     
     echo_response=$http_response
     echo_elapsed=$elapsed
+    echo_datetime=$datetime
     return $echo_retval
 }
 
@@ -577,16 +581,6 @@ _get_ticket(){
     an="${array_an[$input]}"
     denom=$(Get_denom $sn)
 
-    ## Test the Echo
-    #test_echo=$(_echo $input)
-    #run_echo=$?
-    #if [ $run_echo -eq 1 ];then
-    #    Error "$error_05"
-    #    status="ECHO Failed"
-    #    ticket_response=$status
-    #    return 1
-    #fi 
-
     # Test the Detect
     test_detect=$(_detect $input)
     run_detect=$?
@@ -701,16 +695,6 @@ _hints(){
     [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
 
     input="$1"
-
-    # Test the Get_ticket
-    #_get_ticket $input >/dev/null 2>&1
-    #run_get_ticket=$?
-    #if [ $run_get_ticket -eq 1 ];then
-    #    Error "$error_07"
-    #    status="Get Ticket Failed"
-    #    hints_response="$status"
-    #    return 1
-    #fi 
 
     # Get the ticket
     echo "$string_03"
@@ -1107,6 +1091,7 @@ _multi_detect(){
         array_denom+=( "$(Get_denom $s)" )
     done
 
+    ## for debugging only
     #echo "nn = ${array_nn[@]}"
     #echo "sn = ${array_sn[@]}"
     #echo "an = ${array_an[@]}"
@@ -1169,6 +1154,7 @@ _multi_detect(){
 
     post_data="$post_nns&$post_sns&$post_ans&$post_pans&$post_denoms"
 
+    ## for debugging only
     #echo "post_nns = $post_nns"
     #echo "post_sns = $post_sns"
     #echo "post_ans = $post_ans"
@@ -1329,6 +1315,7 @@ _post_multi_dtect(){
     http_retval=$?
     end_s=$(Timer)
     elapsed=$(( (end_s-start_s)/1000000 ))
+    ## for debugging only
     #echo $http_response
 
     if [ $http_retval -eq 0 ];then
@@ -1425,6 +1412,7 @@ _multi_get_ticket(){
         array_denom+=( "$(Get_denom $k)" )
     done
 
+    ## for debugging only
     #echo "nn = ${array_nn[@]}"
     #echo "sn = ${array_sn[@]}"
     #echo "an = ${array_an[@]}"
@@ -1487,6 +1475,7 @@ _multi_get_ticket(){
 
     post_data="$post_nns&$post_sns&$post_ans&$post_pans&$post_denoms"
 
+    ## for debugging only
     #echo "post_nns = $post_nns"
     #echo "post_sns = $post_sns"
     #echo "post_ans = $post_ans"
@@ -1715,6 +1704,7 @@ _multi_fix(){
             done
 
             post_data="$post_fromservers&$post_messages&$post_pans"
+            ## for debugging only
             #echo "post_fromservers = $post_fromservers"
             #echo "post_messages = $post_messages"
             #echo "post_pans = $post_pans"
@@ -1821,7 +1811,6 @@ Fix_ticket_request(){
     an="$5"
     denom="$6"
     raida_url="https://$raida.cloudcoin.global/service/get_ticket"
-    #raida_url="$raida_url?nn=$nn&sn=$sn&toserver=$toserver&an=$an&pan=$an&denomination=$denom"
     raida_url="$raida_url?nn=$nn&sn=$sn&an=$an&pan=$an&denomination=$denom"
 
     http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
