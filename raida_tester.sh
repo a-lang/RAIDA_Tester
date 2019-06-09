@@ -7,10 +7,11 @@
 #   17/10/15 - Added detection for version
 #   18/04/10 - JSON validation for ECHO
 #   19/05/25 - Added datetime for Advanced ECHO 
+#   19/06/09 - Added multi_fix
 #
 
 # Variables
-version="190525"
+version="190609"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
 testcoinfile3="testcoin_800.stack"
@@ -93,6 +94,7 @@ RAIDA Tester Commands Available:
 [+] multi_detect+    (md2)
 [+] multi_get_ticket (mg)
 [+] multi_hints      (mh)
+[+] multi_fix        (mf)
 [+] advanced         (a)
 [+] quit             (q)
 EOF
@@ -158,9 +160,9 @@ Main()
         #    isFix4Mode="false"
         #    Process_request _multi_fix
 
-        #elif [ "$input" == "multi_fix4" -o "$input" == "mf4" ];then
-        #    isFix4Mode="true"
-        #    Process_request _multi_fix      
+        elif [ "$input" == "multi_fix4" -o "$input" == "mf" ];then
+            isFix4Mode="true"
+            Process_request _multi_fix      
 
         elif [ "$input" == "advanced" -o "$input" == "a" ];then
             Advanced
@@ -288,13 +290,13 @@ Process_request(){
         _multi_hints)
         PROMPT="MULTI_HINTS"
         ;;
-        #_multi_fix)
-        #if [ "$isFix4Mode" = "true" ];then
-        #    PROMPT="MULTI_FIX4"
-        #else
-        #    PROMPT="MULTI_FIX3"
-        #fi
-        #;;   
+        _multi_fix)
+        if [ "$isFix4Mode" = "true" ];then
+            PROMPT="MULTI_FIX4"
+        else
+            PROMPT="MULTI_FIX3"
+        fi
+        ;;   
         *)
         PROMPT="XXX"
         ;;
@@ -384,7 +386,7 @@ _echo()
         echo_retval=1
     fi
 
-    if [ "$status" == "ready" ];then
+    if [ "$status" == "ready" -o "$status" == "notready" ];then
         status_color="$_GREEN_$status$_REST_"
         response_color="$_GREEN_$http_response$_REST_"
     else
@@ -1326,17 +1328,21 @@ _post_multi_dtect(){
             array_status=( $status )
             #echo "status -> ${array_status[@]}"
             
-            total_count=${#array_status[@]}
             pass_count=0
             fail_count=0
-            for s in "${array_status[@]}"
-            do
-                [ "$s" == "pass" ] && ((pass_count++))
-                [ "$s" == "fail" ] && ((fail_count++))
-            done
-    
-            printf " -> Posted: %3d | Detected: %3d | Pass: %3d | Fail: %3d (%4ims)\n" $post_nums $total_count $pass_count $fail_count $elapsed
-            return 0
+            total_count=${#array_status[@]}
+            if [ $total_count -eq $post_nums ];then
+                for s in "${array_status[@]}"
+                do
+                    [ "$s" == "pass" ] && ((pass_count++))
+                    [ "$s" == "fail" ] && ((fail_count++))
+                done
+        
+                printf " -> Posted: %3d | Detected: %3d | Pass: %3d , Fail: %3d (%4ims)\n" $post_nums $total_count $pass_count $fail_count $elapsed
+                return 0
+            else
+                detect_retval=1
+            fi
         else
             detect_retval=1
         fi
@@ -1345,7 +1351,7 @@ _post_multi_dtect(){
     fi
 
     if [ $detect_retval -eq 1 ];then
-        printf " -> Posted: %3d | Detected: ${_RED_}%3d${_REST_} | Pass: ${_RED_}%3d${_REST_} | Fail: ${_RED_}%3d${_REST_}\n" $post_nums 0 0 0
+        printf " -> Posted: %3d | Detected: ${_RED_}%3d${_REST_} | Pass: ${_RED_}%3d${_REST_} , Fail: ${_RED_}%3d${_REST_}\n" $post_nums 0 0 0
     fi
 
 }
@@ -1690,20 +1696,28 @@ _multi_fix(){
                 for d in "${array_tickets[@]}"
                 do
                     if [ $n -eq 1 -a $notes -eq 0 ];then
-                        post_fromservers="fromserver$n[]=$i"
+                        #post_fromservers="fromserver$n[]=$i"
                         post_messages="message${n}[]=${d}"
                     else
-                        post_fromservers="$post_fromservers&fromserver$n[]=$i"
+                        #post_fromservers="$post_fromservers&fromserver$n[]=$i"
                         post_messages="${post_messages}&message${n}[]=${d}"
                     fi
 
                     ((notes++))
                 done
 
+                if [ $n -eq 1 ];then
+                    post_fromservers="fromserver$n=$i"
+                else
+                    post_fromservers="$post_fromservers&fromserver$n=$i"
+                fi
+
                 ((n++))
             done
 
+            #post_data="$post_fromservers&$post_messages&$post_pans"
             post_data="$post_fromservers&$post_messages&$post_pans"
+
             ## for debugging only
             #echo "post_fromservers = $post_fromservers"
             #echo "post_messages = $post_messages"
@@ -1722,7 +1736,7 @@ _multi_fix(){
             if [ $http_retval -eq 0 ];then
                 status=$(echo $http_response | $JQ_CMD -r '.[0].status')
         
-                if [ "$status" == "success" ];then
+                if [ "$status" == "pass" ];then
                     response_color="$_GREEN_$http_response$_REST_"
                 else
                     response_color="$_RED_$http_response$_REST_"
