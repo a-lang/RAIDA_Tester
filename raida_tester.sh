@@ -11,7 +11,7 @@
 #
 
 # Variables
-version="190609"
+version="190613"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
 testcoinfile3="testcoin_800.stack"
@@ -1680,7 +1680,7 @@ _multi_fix(){
 
             for i in ${array_trusted_servers[@]}
             do
-                _multi_get_ticket $i >/dev/null 2>&1
+                _multi_get_ticket $i 
                 run_multi_get_ticket=$?
                 if [ $run_multi_get_ticket -eq 1 ];then
                     Error "$error_07"
