@@ -11,10 +11,10 @@
 #
 
 # Variables
-version="190613"
+version="190622"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
-testcoinfile3="testcoin_800.stack"
+testcoinfile3="testcoin_multi2.stack"
 raida_nums=25
 max_latency=15
 max_post_notes=400
