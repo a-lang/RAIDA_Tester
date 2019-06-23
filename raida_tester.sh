@@ -11,7 +11,7 @@
 #
 
 # Variables
-version="190622"
+version="190623"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
 testcoinfile3="testcoin_multi2.stack"
@@ -27,6 +27,10 @@ CURL_OPT="-qSfs -m 60"
 CURL_OPT_multi="-qSfs -m 60 -X POST"
 JQ_CMD="jq"
 HTML_DIR="html"
+# for Debgugging only
+DEBUG=0    # True:1 , False:0
+LOG_FILE="debug.log"
+
 
 
 # Don't change the following lines
@@ -77,7 +81,7 @@ Show_head(){
 # in the same folder as this program to run tests.                          #
 # The test coin will not be written to.                                     #
 #############################################################################
-[Version: ${version}]
+[Version: ${version}][Debug: `[ $DEBUG -eq 1 ] && echo "ON" || echo "OFF"`]
 EOF
 }
 
@@ -1171,6 +1175,13 @@ _multi_detect(){
     end_s=$(Timer)
     elapsed=$(( (end_s-start_s)/1000000 ))
 
+    if [ $DEBUG -eq 1 ]; then
+        Log "[_multi_detect] " "POST_URL: $raida_url "
+        Log "[_multi_detect] " "POST_DATA: $post_data"
+        Log "[_multi_detect] " "POST_RESPONSE: $http_response"
+        Log "[_multi_detect] " "End of POST"
+    fi
+
     if [ $http_retval -eq 0 ];then
         status=$(echo $http_response | $JQ_CMD -r '.[0].status')
 
@@ -1265,7 +1276,7 @@ _multi_detect2(){
                     #echo "-> $post_pans"
                     #echo "-> $post_denoms"
                     post_data="$post_nns&$post_sns&$post_ans&$post_pans&$post_denoms"
-                    _post_multi_dtect "$node" "$post_data" $notes_post
+                    _post_multi_detect "$node" "$post_data" $notes_post
                 else
                     last_round=$((($notes_total - $n)))
                     for ((i=0;i<$last_round;i++))
@@ -1291,7 +1302,7 @@ _multi_detect2(){
                     #echo "last-> $post_pans"
                     #echo "last-> $post_denoms"
                     post_data="$post_nns&$post_sns&$post_ans&$post_pans&$post_denoms"
-                    _post_multi_dtect "$node" "$post_data" $last_round 
+                    _post_multi_detect "$node" "$post_data" $last_round 
                 fi
             done
             break
@@ -1301,7 +1312,7 @@ _multi_detect2(){
 
 }
 
-_post_multi_dtect(){
+_post_multi_detect(){
     unset array_status
     local node post_data status s pass_count fail_count
     local raida raida_url start_s end_s elapsed total_count
@@ -1319,6 +1330,13 @@ _post_multi_dtect(){
     elapsed=$(( (end_s-start_s)/1000000 ))
     ## for debugging only
     #echo $http_response
+
+    if [ $DEBUG -eq 1 ]; then
+        Log "[_post_multi_detect] " "POST_URL: $raida_url "
+        Log "[_post_multi_detect] " "POST_DATA: $post_data"
+        Log "[_post_multi_detect] " "POST_RESPONSE: $http_response"
+        Log "[_post_multi_detect] " "End of POST"
+    fi
 
     if [ $http_retval -eq 0 ];then
         status=$(echo $http_response | $JQ_CMD -r '.[].status' 2>&1)
@@ -2145,8 +2163,16 @@ Get_version(){
     echo "$version"
 }
 
+Log() {  # classic logger
+    local prefix="[$(date +%Y/%m/%d\ %H:%M:%S)]: "
+    echo "${prefix} $@" >> $LOG_FILE 2>&1
+}
+
+
+
 
 cd $WORKDIR
+[ -f $LOG_FILE ] && cat /dev/null > $LOG_FILE
 Check_requirement
 Show_head
 Main
