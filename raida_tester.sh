@@ -8,10 +8,11 @@
 #   18/04/10 - JSON validation for ECHO
 #   19/05/25 - Added datetime for Advanced ECHO 
 #   19/06/09 - Added multi_fix
+#   19/06/27 - Update _all_echo
 #
 
 # Variables
-version="190623"
+version="190627"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
 testcoinfile3="testcoin_multi2.stack"
@@ -344,7 +345,8 @@ _all_echo(){
         fi
 
         version=$(Get_version $n) 
-        Output $n "v$version|time:$echo_datetime|$result" $echo_elapsed
+        #Output $n "v$version|time:$echo_datetime|$result" $echo_elapsed
+        Output $n "v$version|time:$echo_datetime|status:$result|$echo_msg"
 
         if [ "$result" != "PASS" ];then
             Output2 "$echo_response"
@@ -370,6 +372,7 @@ _echo()
     echo_response=""
     echo_elapsed=0
     echo_datetime=""
+    echo_msg=""
     
     echo_retval=0
     input="$1"
@@ -384,6 +387,7 @@ _echo()
     if [ $http_retval -eq 0 ]; then
         datetime=$(echo $http_response | $JQ_CMD -r '.time' 2>/dev/null)
         status=$(echo $http_response | $JQ_CMD -r '.status' 2>/dev/null)
+        msg=$(echo $http_response | $JQ_CMD -r '.message' 2>/dev/null)
         [ -z $status ] && status="invalid json data"
     else
         status="error"
@@ -409,6 +413,7 @@ _echo()
     echo_response=$http_response
     echo_elapsed=$elapsed
     echo_datetime=$datetime
+    echo_msg=$msg
     return $echo_retval
 }
 
@@ -2136,7 +2141,7 @@ Output(){
     node=$1
     status="$2"
     ms=$3
-    printf " %.18s [%4b] (%4ims) \n" "RAIDA($node).............." "$status" $ms
+    printf " %.18s [%4b] \n" "RAIDA($node).............." "$status"
 }
 
 Output2(){
