@@ -12,13 +12,14 @@
 #
 
 # Variables
-version="190627"
+version="190629"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
 testcoinfile3="testcoin_multi2.stack"
 raida_nums=25
 max_latency=15
 max_post_notes=400
+warn_ms=4000    # millisecond
 _REST_='\033[0m'
 _GREEN_='\033[32m'
 _RED_='\033[31m'
@@ -119,9 +120,9 @@ NOTE: The following packages must be already installed on the system.
  * Jq (see more details on https://stedolan.github.io/jq/)
 
 Recommend: To install these packages, you can run the commands:
- yum install curl
+ yum install curl jq
  or
- apt-get install curl
+ apt-get install curl jq
   
 EOF
 }
@@ -1360,9 +1361,14 @@ _post_multi_detect(){
                     [ "$s" == "pass" ] && ((pass_count++))
                     [ "$s" == "fail" ] && ((fail_count++))
                 done
-        
-                printf " -> Posted: %3d | Detected: %3d | Pass: %3d , Fail: %3d (%4ims)\n" $post_nums $total_count $pass_count $fail_count $elapsed
+                
+                if [ $elapsed -gt $warn_ms ];then
+                    printf " -> Posted: %3d | Detected: %3d | Pass: %3d , Fail: %3d (${_RED_}%4i${_REST_}ms)\n" $post_nums $total_count $pass_count $fail_count $elapsed
+                else
+                    printf " -> Posted: %3d | Detected: %3d | Pass: %3d , Fail: %3d (%4ims)\n" $post_nums $total_count $pass_count $fail_count $elapsed
+                fi    
                 return 0
+
             else
                 detect_retval=1
             fi
