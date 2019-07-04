@@ -12,7 +12,7 @@
 #
 
 # Variables
-version="190629"
+version="190704"
 testcoin="testcoin.stack"
 testcoin_multi="testcoin_multi.stack"
 testcoinfile3="testcoin_multi2.stack"
@@ -707,7 +707,6 @@ _hints(){
     [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
 
     input="$1"
-
     # Get the ticket
     echo "$string_03"
     Hints_ticket_request $input
@@ -1558,7 +1557,8 @@ _multi_hints(){
     local input
     local raida
     local raida_url
-    local i
+    local i h
+    local http_hints _ms
 
 
     # Check the testcoin file
@@ -1606,7 +1606,18 @@ _multi_hints(){
     elapsed=$(( (end_s-start_s)/1000000 ))
 
     if [ $http_retval -eq 0 ];then
+        http_hints=$(echo $http_response | $JQ_CMD -r .[])
+        array_hints=( $http_hints)
+
         response_color="$_GREEN_$http_response$_REST_"
+        for h in "${array_hints[@]}"
+        do
+            _ms=$(echo $h | cut -d: -f2)
+            if [ $_ms -ge $max_latency -o $_ms -lt 0 ]; then
+                response_color="$_RED_$http_response$_REST_"
+            fi
+        done
+
     else
         response_color="$_RED_$http_response$_REST_"
         multi_hints_retval=1
