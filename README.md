@@ -3,7 +3,7 @@ RAIDA Tester
 
 The program is used to test CloudCoin RAIDA network, which is written in Bash.
 
-It's able to work on all Linux distro and Mac OS. 
+It's able to work on all Linux distro, Mac OS and Windows 10 with WSL. 
 
 Demonstration: https://asciinema.org/a/4bbzhe6azodv7ovl1nupg3k40
 
