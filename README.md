@@ -8,6 +8,7 @@ It's able to work on all Linux distro and Mac OS.
 Demonstration: https://asciinema.org/a/4bbzhe6azodv7ovl1nupg3k40
 
 ![image](raida-tester_on_Mac.png)
+![image](raida-tester_on_Win10.png)
 ![image](html_report.png)
 
 
@@ -23,10 +24,9 @@ How to use it?
 2. Install the packages if they aren't installed yet.
 
 ```sh
-sudo apt-get install curl
+sudo apt-get install jq curl
 ```
-
-To install Jq on your computer please visit https://stedolan.github.io/jq/
+>In case any issues with jq installation on your computer please visit https://stedolan.github.io/jq/
 
 
 3. Clone it to the computer then run it
@@ -36,6 +36,6 @@ git clone https://github.com/a-lang/RAIDA_Tester.git
 cd RAIDA_Tester/
 chmod +x *.sh
 ./raida_tester.sh
-``` 
+```
 
 Hoping you like this.
