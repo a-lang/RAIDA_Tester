@@ -12,7 +12,7 @@
 #
 
 # Variables
-VERSION="190707"
+VERSION="190708"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -1933,10 +1933,8 @@ _multi_fix(){
                 for d in "${array_tickets[@]}"
                 do
                     if [ $n -eq 1 -a $notes -eq 0 ];then
-                        #post_fromservers="fromserver$n[]=$i"
                         post_messages="message${n}[]=${d}"
                     else
-                        #post_fromservers="$post_fromservers&fromserver$n[]=$i"
                         post_messages="${post_messages}&message${n}[]=${d}"
                     fi
 
@@ -1952,7 +1950,6 @@ _multi_fix(){
                 ((n++))
             done
 
-            #post_data="$post_fromservers&$post_messages&$post_pans"
             post_data="$post_fromservers&$post_messages&$post_pans"
 
             ## for debugging only
