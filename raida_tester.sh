@@ -12,7 +12,7 @@
 #
 
 # Variables
-VERSION="190708"
+VERSION="190709"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -33,7 +33,7 @@ CURL_OPT_multi="-qSfs -m 60 -X POST"
 JQ_CMD="jq"
 HTML_DIR="html"
 # for Debgugging only
-DEBUG=0    # True:1 , False:0
+DEBUG=1    # True:1 , False:0
 LOG_FILE="debug.log"
 
 
@@ -1966,6 +1966,13 @@ _multi_fix(){
             http_retval=$?
             end_s=$(Timer)
             elapsed=$(( (end_s-start_s)/1000000 ))
+
+            if [ $DEBUG -eq 1 ]; then
+                Log "[_multi_fix] " "POST_URL: $raida_url "
+                Log "[_multi_fix] " "POST_DATA: $post_data"
+                Log "[_multi_fix] " "POST_RESPONSE: $http_response"
+                Log "[_multi_fix] " "End of POST"
+            fi
             
             if [ $http_retval -eq 0 ];then
                 status=$(echo $http_response | $JQ_CMD -r '.[0].status')
