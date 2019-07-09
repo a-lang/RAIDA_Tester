@@ -33,7 +33,7 @@ CURL_OPT_multi="-qSfs -m 60 -X POST"
 JQ_CMD="jq"
 HTML_DIR="html"
 # for Debgugging only
-DEBUG=1    # True:1 , False:0
+DEBUG=0    # True:1 , False:0
 LOG_FILE="debug.log"
 
 
@@ -1795,6 +1795,13 @@ _multi_hints(){
     http_retval=$?
     end_s=$(Timer)
     elapsed=$(( (end_s-start_s)/1000000 ))
+
+    if [ $DEBUG -eq 1 ]; then
+        Log "[_multi_hints] " "POST_URL: $raida_url "
+        Log "[_multi_hints] " "POST_DATA: $post_data"
+        Log "[_multi_hints] " "POST_RESPONSE: $http_response"
+        Log "[_multi_hints] " "End of POST"
+    fi
 
     if [ $http_retval -eq 0 ];then
         http_hints=$(echo $http_response | $JQ_CMD -r .[])
