@@ -12,7 +12,7 @@
 #
 
 # Variables
-VERSION="190709"
+VERSION="190710"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -22,7 +22,7 @@ TESTCOINFILE6="testcoin_bank_x3.stack"
 RAIDA_NUMS=25
 MAX_LATENCY=15
 MAX_POST_NOTES=400
-WARN_MS=6000    # millisecond
+WARN_MS=10000    # millisecond
 _REST_='\033[0m'
 _GREEN_='\033[32m'
 _RED_='\033[31m'
@@ -414,7 +414,7 @@ _SkyWallet() {
         if [ $input -ge 1 -a $input -le 11 ] 2>/dev/null;then
             case "$input" in
                 1)
-                     _multi_detect "$node_num" "$testcoinfile6" 
+                     _multi_detect "$node_num" "$TESTCOINFILE6" 
                      ;;
                 2)
                     _SW_Show "$node_num" "$TESTCOINFILE4"
