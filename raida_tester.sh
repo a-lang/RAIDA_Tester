@@ -12,7 +12,7 @@
 #
 
 # Variables
-VERSION="190710"
+VERSION="190716"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -31,6 +31,7 @@ CURL_CMD="curl"
 CURL_OPT="-qSfs -m 60"
 CURL_OPT_multi="-qSfs -m 60 -X POST"
 JQ_CMD="jq"
+GETIP_CMD="dig"
 HTML_DIR="html"
 # for Debgugging only
 DEBUG=0    # True:1 , False:0
@@ -104,9 +105,30 @@ RAIDA Tester Commands Available:
 [+] skywallet         (sw)  *New*
 [+] fix_fracked_coins (ff)  *New*
 [+] advanced          (a)
+[+] misc              (m)
+[+] help              (?)
 [+] quit              (q)
 EOF
 
+}
+
+Show_help(){
+    cat <<EOF
+#######################################
+###        RAIDA Tester Help        ###
+#######################################
+
+File                    Function      Notes
+Name                    Keys          (Coins)
+===============================================
+testcoin.stack          d/g/h/f       1
+testcoin_multi.stack    md/mg/mh/mf   3-200
+testcoin_multi2.stack   md2           800+
+testcoin_id1_x1.stack   sw            1
+testcoin_id2_x1.stack   sw            1
+testcoin_bank_x3.stack  sw            3-200
+
+EOF
 }
 
 Error(){
@@ -120,11 +142,12 @@ Show_requirement(){
 NOTE: The following packages must be already installed on the system.
  * Curl
  * Jq (see more details on https://stedolan.github.io/jq/)
+ * dig
 
 Recommend: To install these packages, you can run the commands:
- yum install curl jq
+ yum install curl jq bind-utils
  or
- apt-get install curl jq
+ apt-get install curl jq dnsutils
   
 EOF
 }
@@ -172,15 +195,21 @@ Main()
             isFix4Mode="true"
             Process_request _multi_fix      
 
-        elif [ "$input" == "advanced" -o "$input" == "a" ];then
-            Advanced
-
         elif [ "$input" == "skywallet" -o "$input" == "sw" ];then
             Ask_raida_node "_SkyWallet" "SKYWALLET"
 
         elif [ "$input" == "fix_fracked_coins" -o "$input" == "ff" ];then
             _fix_fracked_coins
 
+        elif [ "$input" == "advanced" -o "$input" == "a" ];then
+            Advanced
+
+        elif [ "$input" == "misc" -o "$input" == "m" ];then
+            Misc
+
+        elif [ "$input" == "help" -o "$input" == "?" ];then
+            Help
+            
         elif [ "$input" == "quit" -o "$input" == "q" ];then
             break
 
@@ -194,10 +223,17 @@ Main()
 Check_requirement(){
     is_pass=1
     
-    [ $(which $JQ_CMD) ] || is_pass=0
+    [ $(which $JQ_CMD) ] || {
+        Show_requirement
+        is_pass=0
+    }
+
+    [ $(which $GETIP_CMD) ] || {
+        Show_requirement
+        is_pass=0
+    }
 
     if [ $is_pass -eq 0 ];then
-        Show_requirement
         exit 1
     fi
 }
@@ -273,6 +309,53 @@ Advanced(){
     done
 }
 
+Misc(){
+    local prompt input
+    input=""
+    prompt="MISC"
+    while true
+    do
+        echo "Select the function [1-2]: 1.Fix-Fracked 2.IP2SN q.Exit"
+        echo "                           "
+        echo -n "$prompt> " && read input
+        if [ $input -ge 1 -a $input -le 7 ] 2>/dev/null ;then
+            case "$input" in
+                1)
+                     _fix_fracked_coins $prompt
+                     ;;
+                2)
+                    _IP2SN $prompt
+                    ;;
+            esac
+        elif [ "$input" == "q" ] 2>/dev/null ;then
+            break
+
+        else
+            Error "$ERROR_02"
+
+        fi
+    done
+}
+
+Help(){
+    local prompt input
+    input=""
+    prompt="HELP"
+
+    Show_help
+    while true
+    do
+        echo "Enter q to end."
+        echo -n "$prompt> " && read input
+        if [ "$input" == "q" ] 2>/dev/null ;then
+            break
+        else
+            Error "$ERROR_02"
+
+        fi
+    done
+}
+
 Ask_raida_node(){  # Ask_raida "Call-to-Function" "Prompt-String"
     local func prompt input 
     func="$1"
@@ -339,11 +422,11 @@ _fix_fracked_coins(){
     local sn sns_list
 
     coinfile=""
-    prompt1="FIX_COINS"
+    prompt1="$1>FIX_COINS"
     Ask_coin_file "$prompt1"
     if [ $? -eq 0 ];then
         coinfile="$GET_COINFILE"
-        prompt2="$prompt1)$coinfile"
+        prompt2="$prompt1>$coinfile"
     else
         return 1
     fi
@@ -363,15 +446,15 @@ _fix_fracked_coins(){
         echo "[2] multi fix"
         echo
         echo "Please select the function. Enter q to end."
-        echo -n "$prompt2)[1-2]> " && read input1
+        echo -n "$prompt2[1-2]> " && read input1
         if [ $input1 -ge 1 -a $input1 -le 2  ] 2>/dev/null;then
             case "$input1" in
                 1)
-                    prompt3="$prompt2)_multi_detect"
+                    prompt3="$prompt2>_multi_detect"
                     func="_multi_detect"
                     ;;
                 2)
-                    prompt3="$prompt2)_multi_fix"
+                    prompt3="$prompt2>_multi_fix"
                     isFix4Mode="true"
                     func="_multi_fix"
                     ;;
@@ -381,7 +464,7 @@ _fix_fracked_coins(){
             do
                 echo
                 echo "Please select the RAIDA node. Enter q to go back."
-                echo -n "$prompt3)[0-$((RAIDA_NUMS-1))]> " && read input2
+                echo -n "$prompt3[0-$((RAIDA_NUMS-1))]> " && read input2
                 if [ $input2 -ge 0 -a $input2 -le $((RAIDA_NUMS-1)) ] 2>/dev/null;then
                     node_num=$input2
                     #echo "Debug: $func $node_num $coinfile"
@@ -393,6 +476,51 @@ _fix_fracked_coins(){
             done
         elif [ "$input1" != "q" ];then 
             Error "$ERROR_02"
+        fi
+    done
+
+}
+
+_IP2SN(){
+    local input addr ip
+    local prompt
+    prompt="$1>IP2SN"
+    while [ "$input" != "q" ]
+    do
+        echo
+        echo "Please input the address to the SkyWallet. Enter q to go back." 
+        echo -n "$prompt[*.skywallet.cc]> " && read input
+        if [ -n "$input" -a "$input" != "q" ] 2>/dev/null;then
+            addr=$(addr_validation "$input")
+            if [ -z "$addr" ];then
+                Error "$ERROR_02"
+                continue
+            fi
+
+            if ! Check_Internet;then
+                echo
+                Error " Internet is not connected!"
+                continue
+            fi
+            
+            addr=$(echo $addr | cut -d: -f2)
+            type=$(echo $addr | cut -d: -f1)
+            if [ "$type" == "IP" ];then
+                ip=$addr
+            else
+                ip=$(get_ip "$addr")
+            fi
+            
+            if [ -z "$ip" ];then
+                echo
+                Error " The SkyWallet ($addr) is unavailable!"
+                continue
+            fi
+
+            sn=$(ip2dec "0.${ip#*.}")
+            echo
+            echo -e "$_GREEN_ The SN of the SkyWallet ($addr) is: $_BOLD_$sn$_REST_"
+
         fi
     done
 
@@ -2722,6 +2850,46 @@ Coin_validation(){
     fi
 }
 
+addr_validation(){
+    local addr
+    addr=$(ToLower $1)
+    regex_name="^[a-zA-Z0-9\.-]*(.skywallet.cc)$"
+    regex_ip="^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$"
+    if [[ $addr =~ $regex_name ]];then
+        echo "FQDN:$addr"
+        return 0
+    elif [[ $addr =~ $regex_ip ]];then
+        echo "IP:$addr"
+        return 0
+    else
+        echo 
+        return 1
+    fi
+}
+
+get_ip(){
+    local name
+    name="$1"
+    ip=$($GETIP_CMD +short $name)
+    echo "$ip"
+    return 0
+}
+
+ip2dec(){
+    local a b c d ip=$@
+    IFS=. read -r a b c d <<< "$ip"
+    printf '%d\n' "$((a * 256 ** 3 + b * 256 ** 2 + c * 256 + d))"
+}
+
+Check_Internet(){
+    if $CURL_CMD --silent --head http://www.google.com/  | egrep "^HTTP\/.* 200 OK" >/dev/null;then  
+        #echo Internet status: OK
+        return 0  
+    else  
+        #echo Internet status: ERROR 
+        return 1 
+    fi  
+}
 
 Check_html_template(){
     local html_template
@@ -2969,6 +3137,14 @@ Log() {  # classic logger
     local prefix="[$(date +%Y/%m/%d\ %H:%M:%S)]: "
     echo "${prefix} $@" >> $LOG_FILE 2>&1
 }
+
+ToLower() {
+   echo $1 | tr "[:upper:]" "[:lower:]"
+ }
+
+ ToUpper() {
+   echo $1 | tr "[:lower:]" "[:upper:]"
+ }
 
 
 
