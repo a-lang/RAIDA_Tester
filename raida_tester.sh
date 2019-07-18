@@ -12,7 +12,7 @@
 #
 
 # Variables
-VERSION="190716"
+VERSION="190718"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -81,7 +81,7 @@ Show_head(){
 # The Software is provided as is, with all faults, defects and errors, and  #
 # without warranty of any kind.                                             #
 #                                                                           #
-# You must have several authentic CloudCoin .stack files called             #
+# You have to have several authentic CloudCoin .stack files called          #
 # 'testcoin*.stack' in the same folder as this program to run tests.        #
 #############################################################################
 [Version: ${VERSION}][Debug: `[ $DEBUG -eq 1 ] && echo "ON" || echo "OFF"`]
@@ -114,10 +114,14 @@ EOF
 
 Show_help(){
     cat <<EOF
-#######################################
-###        RAIDA Tester Help        ###
-#######################################
+################################################
+###                                          ###
+###            RAIDA Tester Help             ###
+###                                          ###
+###            <Enter q to exit>             ###
+################################################
 
+:The coins files)
 File                    Function      Notes
 Name                    Keys          (Coins)
 ===============================================
@@ -127,6 +131,15 @@ testcoin_multi2.stack   md2           800+
 testcoin_id1_x1.stack   sw            1
 testcoin_id2_x1.stack   sw            1
 testcoin_bank_x3.stack  sw            3-200
+
+
+:How to Enable the Debug mode)
+Find the line below, change it to 1
+
+    DEBUG=0
+
+The debug info will be stored in the file debug.log.
+
 
 EOF
 }
@@ -318,7 +331,7 @@ Misc(){
         echo "Select the function [1-2]: 1.Fix-Fracked 2.IP2SN q.Exit"
         echo "                           "
         echo -n "$prompt> " && read input
-        if [ $input -ge 1 -a $input -le 7 ] 2>/dev/null ;then
+        if [ $input -ge 1 -a $input -le 2 ] 2>/dev/null ;then
             case "$input" in
                 1)
                      _fix_fracked_coins $prompt
@@ -345,7 +358,7 @@ Help(){
     Show_help
     while true
     do
-        echo "Enter q to end."
+        echo 
         echo -n "$prompt> " && read input
         if [ "$input" == "q" ] 2>/dev/null ;then
             break
