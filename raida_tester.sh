@@ -92,22 +92,22 @@ Show_menu(){
     cat <<EOF
 ===================================
 RAIDA Tester Commands Available:
-[+] echo              (e)
-[+] detect            (d)
-[+] get_ticket        (g)
-[+] hints             (h)
-[+] fix               (f)
-[+] multi_detect      (md)
-[+] multi_detect+     (md2)
-[+] multi_get_ticket  (mg)
-[+] multi_hints       (mh)
-[+] multi_fix         (mf)
+[-] echo              (e)
+[-] detect            (d)
+[-] get_ticket        (g)
+[-] hints             (h)
+[-] fix               (f)
+[-] multi_detect      (md)
+[-] multi_detect+     (md2)
+[-] multi_get_ticket  (mg)
+[-] multi_hints       (mh)
+[-] multi_fix         (mf)
 [+] skywallet         (sw)  *New*
 [+] fix_fracked_coins (ff)  *New*
 [+] advanced          (a)
 [+] misc              (m)
-[+] help              (?)
-[+] quit              (q)
+[-] help              (?)
+[-] quit              (q)
 EOF
 
 }
