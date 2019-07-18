@@ -12,7 +12,7 @@
 #
 
 # Variables
-VERSION="190718"
+VERSION="190719"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -114,14 +114,22 @@ EOF
 
 Show_help(){
     cat <<EOF
-################################################
-###                                          ###
-###            RAIDA Tester Help             ###
-###                                          ###
-###            <Enter q to exit>             ###
-################################################
+##############################################################
+###                                                        ###
+###                  RAIDA Tester Help                     ###
+###                                                        ###
+###                  <Enter q to exit>                     ###
+##############################################################
 
-:The coins files)
+:Introduction
+This program is designed to test if the RAIDA node works with 
+all functions such as echo, detect etc.
+
+:The coins files
+Each test requires different coins files, each stack file has 
+a fixed filename with one coin or multiple coins as following 
+list. 
+
 File                    Function      Notes
 Name                    Keys          (Coins)
 ===============================================
@@ -133,14 +141,14 @@ testcoin_id2_x1.stack   sw            1
 testcoin_bank_x3.stack  sw            3-200
 
 
-:How to Enable the Debug mode)
+:How to Enable the Debug mode
 Find the line below, change it to 1
 
     DEBUG=0
 
-The debug info will be stored in the file debug.log.
+The debug info will be stored in the file <debug.log>.
 
-
+:End of Line (Enter q to exit)
 EOF
 }
 
@@ -328,10 +336,10 @@ Misc(){
     prompt="MISC"
     while true
     do
-        echo "Select the function [1-2]: 1.Fix-Fracked 2.IP2SN q.Exit"
+        echo "Select the function [1-3]: 1.Fix-Fracked 2.IP2SN 3.Weather q.Exit"
         echo "                           "
         echo -n "$prompt> " && read input
-        if [ $input -ge 1 -a $input -le 2 ] 2>/dev/null ;then
+        if [ $input -ge 1 -a $input -le 3 ] 2>/dev/null ;then
             case "$input" in
                 1)
                      _fix_fracked_coins $prompt
@@ -339,6 +347,8 @@ Misc(){
                 2)
                     _IP2SN $prompt
                     ;;
+                3)
+                    _Weather $prompt
             esac
         elif [ "$input" == "q" ] 2>/dev/null ;then
             break
@@ -534,6 +544,32 @@ _IP2SN(){
             echo
             echo -e "$_GREEN_ The SN of the SkyWallet ($addr) is: $_BOLD_$sn$_REST_"
 
+        fi
+    done
+
+}
+
+_Weather() {
+    local prompt url input 
+    local city
+    prompt="$1>WEATHER"
+    if ! Check_Internet;then
+        echo
+        Error " Internet is not connected!"
+        continue
+    fi
+
+    while [ "$input" != "q" ]
+    do
+        echo
+        echo "Please input your city. Enter q to go back." 
+        echo -n "$prompt[Taipei]> " && read input
+        if [ -n "$input" -a "$input" != "q" ] 2>/dev/null;then
+            city=$(ToLower $input)
+            url="http://wttr.in/$city"
+            $CURL_CMD $url
+            echo
+            break
         fi
     done
 
