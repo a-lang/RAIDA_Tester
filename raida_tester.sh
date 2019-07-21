@@ -12,13 +12,17 @@
 #
 
 # Variables
-VERSION="190719"
+VERSION="190721"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
 TESTCOINFILE4="testcoin_id1_x1.stack"
 TESTCOINFILE5="testcoin_id2_x1.stack"
 TESTCOINFILE6="testcoin_bank_x3.stack"
+# for Debgugging only
+DEBUG=0    # True:1 , False:0
+LOG_FILE="debug.log"
+#
 RAIDA_NUMS=25
 MAX_LATENCY=15
 MAX_POST_NOTES=400
@@ -32,10 +36,8 @@ CURL_OPT="-qSfs -m 60"
 CURL_OPT_multi="-qSfs -m 60 -X POST"
 JQ_CMD="jq"
 GETIP_CMD="dig"
+PYTHON_CMD="python"
 HTML_DIR="html"
-# for Debgugging only
-DEBUG=0    # True:1 , False:0
-LOG_FILE="debug.log"
 
 
 
@@ -103,7 +105,6 @@ RAIDA Tester Commands Available:
 [-] multi_hints       (mh)
 [-] multi_fix         (mf)
 [+] skywallet         (sw)  *New*
-[+] fix_fracked_coins (ff)  *New*
 [+] advanced          (a)
 [+] misc              (m)
 [-] help              (?)
@@ -164,11 +165,12 @@ NOTE: The following packages must be already installed on the system.
  * Curl
  * Jq (see more details on https://stedolan.github.io/jq/)
  * dig
+ * python
 
 Recommend: To install these packages, you can run the commands:
- yum install curl jq bind-utils
+ yum install curl jq bind-utils python
  or
- apt-get install curl jq dnsutils
+ apt-get install curl jq dnsutils python
   
 EOF
 }
@@ -217,10 +219,8 @@ Main()
             Process_request _multi_fix      
 
         elif [ "$input" == "skywallet" -o "$input" == "sw" ];then
-            Ask_raida_node "_SkyWallet" "SKYWALLET"
+            Ask_raida_node "_SkyWallet" "SKYWALLET(sw)"
 
-        elif [ "$input" == "fix_fracked_coins" -o "$input" == "ff" ];then
-            _fix_fracked_coins
 
         elif [ "$input" == "advanced" -o "$input" == "a" ];then
             Advanced
@@ -240,24 +240,15 @@ Main()
     done
 }
 
-
-Check_requirement(){
-    is_pass=1
-    
-    [ $(which $JQ_CMD) ] || {
+Check_CMD() {
+    local cmd
+    cmd=$1
+    [ $(which $cmd) ] || {
         Show_requirement
-        is_pass=0
-    }
-
-    [ $(which $GETIP_CMD) ] || {
-        Show_requirement
-        is_pass=0
-    }
-
-    if [ $is_pass -eq 0 ];then
         exit 1
-    fi
+    }
 }
+
 
 Timer(){
 	if [ "$RUNNINGOS" == "LINUX" ];then
@@ -288,7 +279,7 @@ Get_denom(){
 Advanced(){
     local prompt input
     input=""
-    prompt="ADVANCED"
+    prompt="ADVANCED(a)"
     while true
     do
         echo "Test All RAIDA Nodes [1-7]: 1.Echo 2.Detect 3.Ticket 4.Hints 5.Fix q.Exit"
@@ -333,13 +324,13 @@ Advanced(){
 Misc(){
     local prompt input
     input=""
-    prompt="MISC"
+    prompt="MISC(m)"
     while true
     do
-        echo "Select the function [1-3]: 1.Fix-Fracked 2.IP2SN 3.Weather q.Exit"
+        echo "Select the function [1-5]: 1.Fix-Fracked 2.IP->SN 3.SN->IP 4.Weather 5.SpeedTest q.Exit"
         echo "                           "
         echo -n "$prompt> " && read input
-        if [ $input -ge 1 -a $input -le 3 ] 2>/dev/null ;then
+        if [ $input -ge 1 -a $input -le 5 ] 2>/dev/null ;then
             case "$input" in
                 1)
                      _fix_fracked_coins $prompt
@@ -348,7 +339,14 @@ Misc(){
                     _IP2SN $prompt
                     ;;
                 3)
+                    _SN2IP $prompt
+                    ;;
+                4)
                     _Weather $prompt
+                    ;;
+                5)
+                    _SpeedTest $prompt
+                    ;;
             esac
         elif [ "$input" == "q" ] 2>/dev/null ;then
             break
@@ -388,7 +386,7 @@ Ask_raida_node(){  # Ask_raida "Call-to-Function" "Prompt-String"
     while [ "$input" != "$RAIDA_NUMS" ]
     do
         echo
-        echo "What RAIDA# do you want to test $prompt? Enter q to end."
+        echo "What RAIDA# do you want to test $prompt? (Enter q to end)"
         echo -n "$prompt[0-$((RAIDA_NUMS - 1))]> " && read input
         if [ $input -ge 0 -a $input -lt $RAIDA_NUMS  ] 2>/dev/null;then
             $func $input
@@ -425,8 +423,9 @@ Ask_coin_file(){
     GET_COINFILE=""
     while [ "$input" != "q" ]
     do
+        echo "NOTE: The filename is not supposed to contain any space characters."
         echo
-        echo "Please select the coin file. Enter q to end."
+        echo "Please select the coin file. (Enter q to end)"
         echo -n "$prompt[1-$coins_count]> " && read input
         if [ $input -ge 1 -a $input -le $coins_count  ] 2>/dev/null;then
             GET_COINFILE="${coins_list[$((input-1))]}"
@@ -468,7 +467,7 @@ _fix_fracked_coins(){
         echo "[1] multi detect"
         echo "[2] multi fix"
         echo
-        echo "Please select the function. Enter q to end."
+        echo "Please select the function. (Enter q to end)"
         echo -n "$prompt2[1-2]> " && read input1
         if [ $input1 -ge 1 -a $input1 -le 2  ] 2>/dev/null;then
             case "$input1" in
@@ -486,7 +485,7 @@ _fix_fracked_coins(){
             while [ "$input2" != "q" ]
             do
                 echo
-                echo "Please select the RAIDA node. Enter q to go back."
+                echo "Please select the RAIDA node. (Enter q to go back)"
                 echo -n "$prompt3[0-$((RAIDA_NUMS-1))]> " && read input2
                 if [ $input2 -ge 0 -a $input2 -le $((RAIDA_NUMS-1)) ] 2>/dev/null;then
                     node_num=$input2
@@ -507,11 +506,13 @@ _fix_fracked_coins(){
 _IP2SN(){
     local input addr ip
     local prompt
-    prompt="$1>IP2SN"
+    prompt="$1>IP-SN"
+
+    Check_CMD $GETIP_CMD
     while [ "$input" != "q" ]
     do
         echo
-        echo "Please input the address to the SkyWallet. Enter q to go back." 
+        echo "Please input the address to the SkyWallet. (Enter q to go back)" 
         echo -n "$prompt[*.skywallet.cc]> " && read input
         if [ -n "$input" -a "$input" != "q" ] 2>/dev/null;then
             addr=$(addr_validation "$input")
@@ -549,6 +550,26 @@ _IP2SN(){
 
 }
 
+_SN2IP() {
+    local sn ip input
+    prompt="$1>SN-IP"
+
+    while [ "$input" != "q" ]
+    do
+        echo
+        echo "Please input the SN that is converted. (Enter q to go back)" 
+        echo -n "$prompt[1-16777215]> " && read input
+        if [ $input -ge 1 -a $input -le 16777215 ] 2>/dev/null;then
+            ip=$(dec2ip $input)
+            ip="1.${ip#*.}"
+            echo
+            echo -e "$_GREEN_ The IP for the SN ($input) is: $_BOLD_$ip$_REST_"
+        elif [ "$input" != "q" ];then 
+            Error "$ERROR_02"
+        fi
+    done
+}
+
 _Weather() {
     local prompt url input 
     local city
@@ -562,7 +583,7 @@ _Weather() {
     while [ "$input" != "q" ]
     do
         echo
-        echo "Please input your city. Enter q to go back." 
+        echo "Please input your city. (Enter q to go back)" 
         echo -n "$prompt[Taipei]> " && read input
         if [ -n "$input" -a "$input" != "q" ] 2>/dev/null;then
             city=$(ToLower $input)
@@ -573,6 +594,12 @@ _Weather() {
         fi
     done
 
+}
+
+_SpeedTest() {
+    Check_CMD $PYTHON_CMD
+    $CURL_CMD -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | $PYTHON_CMD -
+    echo
 }
 
 _SkyWallet() {
@@ -644,37 +671,37 @@ Process_request(){
 
     case "$option" in
         _echo)
-            prompt="ECHO"
+            prompt="ECHO(e)"
             ;;
         _detect)
-            prompt="DETECT"
+            prompt="DETECT(d)"
             ;;
         _get_ticket)
-            prompt="GET_TICKET"
+            prompt="GET_TICKET(g)"
             ;;
         _hints)
-            prompt="HINTS"
+            prompt="HINTS(h)"
             ;;
         _fix)
-            prompt="FIX"
+            prompt="FIX(f)"
             ;;
         _multi_detect)
-            prompt="MULTI_DETECT"
+            prompt="MULTI_DETECT(md)"
             ;;
         _multi_detect2)
-            prompt="MULTI_DETECT+"
+            prompt="MULTI_DETECT+(md2)"
             ;;
         _multi_get_ticket)
-            prompt="MULTI_GET_TICKET"
+            prompt="MULTI_GET_TICKET(mg)"
             ;;
         _multi_hints)
-            prompt="MULTI_HINTS"
+            prompt="MULTI_HINTS(mh)"
             ;;
         _multi_fix)
             if [ "$isFix4Mode" = "true" ];then
-                prompt="MULTI_FIX4"
+                prompt="MULTI_FIX4(mf)"
             else
-                prompt="MULTI_FIX3"
+                prompt="MULTI_FIX3(mf)"
             fi
             ;;   
     esac
@@ -1158,7 +1185,7 @@ _fix(){
     [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
 
     fixed_server=$1
-    nn=`$JQ_CMD '.cloudcoin[].nn' $TESTCOINFILE | tr -d '"'`
+    nn=`$JQ_CMD '.cloudcoin[].nn' $TESTCOINFILE1 | tr -d '"'`
     sn=`$JQ_CMD '.cloudcoin[].sn' $TESTCOINFILE1 | tr -d '"'`
     string_an=`$JQ_CMD -r '.cloudcoin[].an[]' $TESTCOINFILE1`
     array_an=( $string_an )
@@ -1196,7 +1223,7 @@ _fix(){
     while true
     do
         echo "What RAIDA corners do you want to use? 1.Upper-Left, 2.Upper-Right, 3.Lower-Left, 4.Lower-Right"
-        echo -n "Corner> " && read input
+        echo -n "Corner[1-4]> " && read input
         if [ $input -gt 0 -a $input -lt 5  ];then
             array_name="array_fix_corner$input"
             array_trusted_servers=$(eval echo \${$array_name[@]})
@@ -2883,8 +2910,8 @@ Coin_validation(){
     local file
     file="$1"
 
-    if [ -f $file ];then
-        $JQ_CMD '.cloudcoin' $file >/dev/null 2>&1
+    if [ -f "$file" ];then
+        $JQ_CMD '.cloudcoin' "$file" >/dev/null 2>&1
         is_json=$? 
         if [ $is_json -eq 0 ];then # Is JSON
             echo -e "Loading test coins: $WORKDIR/$file"
@@ -2916,7 +2943,7 @@ addr_validation(){
     fi
 }
 
-get_ip(){
+get_ip() {
     local name
     name="$1"
     ip=$($GETIP_CMD +short $name)
@@ -2924,10 +2951,27 @@ get_ip(){
     return 0
 }
 
-ip2dec(){
+ip2dec() {
     local a b c d ip=$@
     IFS=. read -r a b c d <<< "$ip"
     printf '%d\n' "$((a * 256 ** 3 + b * 256 ** 2 + c * 256 + d))"
+}
+
+dec2ip() {
+    local ip dec=$@
+    for e in {3..0}
+    do
+        ((octet = dec / (256 ** e) ))
+        ((dec -= octet * 256 ** e))
+        if [ -z $ip ]
+        then
+            ip+=$octet
+        else
+            ip+=$delim$octet
+        fi
+        delim=.
+    done
+    printf '%s\n' "$ip"
 }
 
 Check_Internet(){
@@ -3175,7 +3219,7 @@ Get_coin_files(){
     files="$(ls *.stack 2>/dev/null)"
     for coinfile in $files
     do
-        Coin_validation $coinfile >/dev/null
+        Coin_validation "$coinfile" >/dev/null
         [ $? -eq 0 ] && coins_list+=("$coinfile")
     done
     echo "${coins_list[@]}"
@@ -3189,18 +3233,19 @@ Log() {  # classic logger
 
 ToLower() {
    echo $1 | tr "[:upper:]" "[:lower:]"
- }
+}
 
- ToUpper() {
+ToUpper() {
    echo $1 | tr "[:lower:]" "[:upper:]"
- }
+}
 
 
 
 
 cd $WORKDIR
 [ -f $LOG_FILE ] && cat /dev/null > $LOG_FILE
-Check_requirement
+Check_CMD $CURL_CMD
+Check_CMD $JQ_CMD
 Show_head
 Main
 
