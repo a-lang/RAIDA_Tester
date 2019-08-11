@@ -12,7 +12,7 @@
 #
 
 # Variables
-VERSION="190721"
+VERSION="190811"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -20,7 +20,7 @@ TESTCOINFILE4="testcoin_id1_x1.stack"
 TESTCOINFILE5="testcoin_id2_x1.stack"
 TESTCOINFILE6="testcoin_bank_x3.stack"
 # for Debgugging only
-DEBUG=0    # True:1 , False:0
+DEBUG=1    # True:1 , False:0
 LOG_FILE="debug.log"
 #
 RAIDA_NUMS=25
@@ -125,6 +125,17 @@ Show_help(){
 :Introduction
 This program is designed to test if the RAIDA node works with 
 all functions such as echo, detect etc.
+
+:Requirements
+The following packages must be already installed on the system.
+ * Curl
+ * Jq (see more details on https://stedolan.github.io/jq/)
+ * dig
+ * python
+Recommend: To install these packages, you can run the commands:
+ #> yum install curl jq bind-utils python
+ or
+ #> apt-get install curl jq dnsutils python
 
 :The coins files
 Each test requires different coins files, each stack file has 

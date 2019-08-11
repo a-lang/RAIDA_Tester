@@ -39,3 +39,10 @@ chmod +x *.sh
 ```
 
 Hoping you like this.
+
+## Reference
+
+- [How to Install Linux Bash Shell on Windows 10](https://itsfoss.com/install-bash-on-windows/)
+
+  
+
