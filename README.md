@@ -1,7 +1,7 @@
 RAIDA Tester
 ============
 
-The program is used to test CloudCoin RAIDA network, which is written in Bash.
+The program is used to test [CloudCoin RAIDA](https://cloudcoinconsortium.org/) network, which is written in Bash.
 
 It's able to work on all Linux distro, Mac OS and Windows 10 with WSL. 
 
@@ -9,22 +9,22 @@ Demonstration: https://asciinema.org/a/4bbzhe6azodv7ovl1nupg3k40
 
 ![image](raida-tester_on_Mac.png)
 ![image](raida-tester_on_Win10.png)
-![image](html_report.png)
-
 
 Requirement
 -------------
 * Curl
 * Jq
+* dig
+* Python
 
 How to use it?
 ---------------
-1. You must have an authentic CloudCoin .stack file called 'testcoin.stack' in the same folder as this program to run tests.
+1. You must have several authentic CloudCoin .stack files called 'testcoin*.stack' in the same folder as this program to run tests.
 
 2. Install the packages if they aren't installed yet.
 
 ```sh
-sudo apt-get install jq curl
+sudo apt-get install jq curl dnsutils python
 ```
 >In case any issues with jq installation on your computer please visit https://stedolan.github.io/jq/
 
