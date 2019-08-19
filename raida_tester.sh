@@ -12,7 +12,7 @@
 #
 
 # Variables
-VERSION="190811"
+VERSION="190819"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -20,7 +20,7 @@ TESTCOINFILE4="testcoin_id1_x1.stack"
 TESTCOINFILE5="testcoin_id2_x1.stack"
 TESTCOINFILE6="testcoin_bank_x3.stack"
 # for Debgugging only
-DEBUG=1    # True:1 , False:0
+DEBUG=0    # True:1 , False:0
 LOG_FILE="debug.log"
 #
 RAIDA_NUMS=25
@@ -293,8 +293,8 @@ Advanced(){
     prompt="ADVANCED(a)"
     while true
     do
-        echo "Test All RAIDA Nodes [1-7]: 1.Echo 2.Detect 3.Ticket 4.Hints 5.Fix q.Exit"
-        echo "                            6.Multi_Detect  7.Multi_Ticket"
+        echo "Test All RAIDA Nodes [1-7]: 1.Echo 2.Echo2 3.Detect 4.Ticket 5.Hints q.Exit"
+        echo "                            6.Fix 7.Multi_Detect 8.Multi_Ticket"
         echo "NOTE: This process may take a few mins to check all nodes please be patient until all checks done."
         echo -n "$prompt> " && read input
         if [ $input -ge 1 -a $input -le 7 ] 2>/dev/null ;then
@@ -303,21 +303,24 @@ Advanced(){
                      _all_echo
                      ;;
                 2)
-                    _all_detect
+                     _all_echo2
                      ;;
                 3)
+                    _all_detect
+                     ;;
+                4)
                     _all_ticket
                     ;;
-                4)
+                5)
                     _all_hints
                     ;;
-                5)
+                6)
                     _all_fix
                     ;; 
-                6)
+                7)
                     _all_multi_detect
                     ;;
-                7)
+                8)
                     _all_multi_get_ticket
                     ;;
             esac
@@ -761,6 +764,36 @@ _all_echo(){
         #fi
     done
     echo;echo
+}
+
+_all_echo2(){
+    local url latency seconds
+
+    warn=3
+    echo "ECHO: Latency) "
+    for ((n=0;n<$RAIDA_NUMS;n++))
+    do
+        _echo $n >/dev/null 2>&1
+        run_echo=$?
+        if [ $run_echo -eq 0 ];then
+            url="https://raida$n.cloudcoin.global/service/echo"
+            seconds=$(Node_Latency "$url")
+            if [ $(echo "$seconds > $warn"|bc) -eq 1 ];then
+                latency="${_RED_}$seconds${_REST_}"
+            else
+                latency=$seconds
+            fi
+        else
+            latency="${_RED_}----${_REST_}"
+        fi
+
+        if [ $(((($n+1)) % 3)) -ne 0 ];then
+            printf " %.10s %.20bs   " "RAIDA($n):  " $latency
+        else
+            printf " %.10s %.20bs   \n" "RAIDA($n):  " $latency
+        fi
+    done
+    echo;echo    
 }
 
 _echo()
@@ -2993,6 +3026,14 @@ Check_Internet(){
         #echo Internet status: ERROR 
         return 1 
     fi  
+}
+
+Node_Latency(){
+    local url
+    url="$1"
+
+    $CURL_CMD -s -w '%{time_total}' -o /dev/null $url
+    return
 }
 
 Check_html_template(){
