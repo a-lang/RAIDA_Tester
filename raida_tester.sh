@@ -138,6 +138,13 @@ Recommend: To install these packages, you can run the commands:
  or
  #> apt-get install curl jq dnsutils python bc
 
+:Install and Upgrade
+ $> git clone https://github.com/a-lang/RAIDA_Tester.git
+
+ How to Upgrade existing code
+ $> cd RAIDA_Tester/
+ $> git pull
+
 :The coins files
 Each test requires different coins files, each stack file has 
 a fixed filename with one coin or multiple coins as following 
