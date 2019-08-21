@@ -12,7 +12,7 @@
 #
 
 # Variables
-VERSION="190819"
+VERSION="190821"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -132,10 +132,11 @@ The following packages must be already installed on the system.
  * Jq (see more details on https://stedolan.github.io/jq/)
  * dig
  * python
+ * bc
 Recommend: To install these packages, you can run the commands:
- #> yum install curl jq bind-utils python
+ #> yum install curl jq bind-utils python bc
  or
- #> apt-get install curl jq dnsutils python
+ #> apt-get install curl jq dnsutils python bc
 
 :The coins files
 Each test requires different coins files, each stack file has 
@@ -177,11 +178,12 @@ NOTE: The following packages must be already installed on the system.
  * Jq (see more details on https://stedolan.github.io/jq/)
  * dig
  * python
+ * bc
 
 Recommend: To install these packages, you can run the commands:
- yum install curl jq bind-utils python
+ yum install curl jq bind-utils python bc
  or
- apt-get install curl jq dnsutils python
+ apt-get install curl jq dnsutils python bc
   
 EOF
 }
@@ -768,6 +770,8 @@ _all_echo(){
 
 _all_echo2(){
     local url latency seconds
+
+    Check_CMD "bc"
 
     warn=3
     echo "ECHO: Latency) "
