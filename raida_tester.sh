@@ -12,7 +12,7 @@
 #
 
 # Variables
-VERSION="190821"
+VERSION="190824"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -38,7 +38,6 @@ JQ_CMD="jq"
 GETIP_CMD="dig"
 PYTHON_CMD="python"
 HTML_DIR="html"
-
 
 
 # Don't change the following lines
@@ -114,7 +113,7 @@ EOF
 }
 
 Show_help(){
-    cat <<EOF
+    less <<EOF
 ##############################################################
 ###                                                        ###
 ###                  RAIDA Tester Help                     ###
@@ -249,7 +248,7 @@ Main()
             Misc
 
         elif [ "$input" == "help" -o "$input" == "?" ];then
-            Help
+            Show_help
             
         elif [ "$input" == "quit" -o "$input" == "q" ];then
             break
@@ -374,25 +373,6 @@ Misc(){
         elif [ "$input" == "q" ] 2>/dev/null ;then
             break
 
-        else
-            Error "$ERROR_02"
-
-        fi
-    done
-}
-
-Help(){
-    local prompt input
-    input=""
-    prompt="HELP"
-
-    Show_help
-    while true
-    do
-        echo 
-        echo -n "$prompt> " && read input
-        if [ "$input" == "q" ] 2>/dev/null ;then
-            break
         else
             Error "$ERROR_02"
 
