@@ -10,12 +10,13 @@ Demonstration: https://asciinema.org/a/4bbzhe6azodv7ovl1nupg3k40
 ![image](raida-tester_on_Mac.png)
 ![image](raida-tester_on_Win10.png)
 
-Requirement
+Dependencies
 -------------
 * Curl
 * Jq
 * dig
 * Python
+* bc
 
 How to use it?
 ---------------
@@ -24,7 +25,7 @@ How to use it?
 2. Install the packages if they aren't installed yet.
 
 ```sh
-sudo apt-get install jq curl dnsutils python
+sudo apt-get install jq curl dnsutils python bc
 ```
 >In case any issues with jq installation on your computer please visit https://stedolan.github.io/jq/
 

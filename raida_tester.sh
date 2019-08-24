@@ -125,7 +125,7 @@ Show_help(){
 This program is designed to test if the RAIDA node works with 
 all functions such as echo, detect etc.
 
-:Requirements
+:Dependencies
 The following packages must be already installed on the system.
  * Curl
  * Jq (see more details on https://stedolan.github.io/jq/)
