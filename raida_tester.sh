@@ -12,7 +12,7 @@
 #
 
 # Variables
-VERSION="190824"
+VERSION="190825"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -61,6 +61,8 @@ ERROR_05="Error: Test failed, run the echo to see more details."
 ERROR_06="Error: Test failed, run the detect to see more details."
 ERROR_07="Error: Test failed, run the get_ticket to see more details."
 
+#########################################
+# Functions
 
 Show_logo(){
     printf  '
@@ -196,67 +198,66 @@ EOF
 
 Main()
 {
-    input=""
+    local opt
+    opt=""
     while [ "$input" != "quit" ]
     do
         Show_menu
 
-        echo -n "RAIDA Tester> " && read input
-        if [ "$input" == "echo" -o "$input" == "e" ];then
-            Process_request _echo
-
-        elif [ "$input" == "detect" -o "$input" == "d" ];then
-            Process_request _detect
-
-        elif [ "$input" == "get_ticket" -o "$input" == "g" ];then
-            Process_request _get_ticket
-
-        elif [ "$input" == "hints" -o "$input" == "h" ];then
-            Process_request _hints
-
-        elif [ "$input" == "fix" -o "$input" == "f" ];then
-            Process_request _fix
-
-        elif [ "$input" == "multi_detect" -o "$input" == "md" ];then
-            Process_request _multi_detect
-
-        elif [ "$input" == "multi_detect+" -o "$input" == "md2" ];then
-            Process_request _multi_detect2
-
-        elif [ "$input" == "multi_get_ticket" -o "$input" == "mg" ];then
-            Process_request _multi_get_ticket
-
-        elif [ "$input" == "multi_hints" -o "$input" == "mh" ];then
-            Process_request _multi_hints
-
-        #elif [ "$input" == "multi_fix3" -o "$input" == "mf" ];then
-        #    isFix4Mode="false"
-        #    Process_request _multi_fix
-
-        elif [ "$input" == "multi_fix4" -o "$input" == "mf" ];then
-            isFix4Mode="true"
-            Process_request _multi_fix      
-
-        elif [ "$input" == "skywallet" -o "$input" == "sw" ];then
-            Ask_raida_node "_SkyWallet" "SKYWALLET(sw)"
-
-
-        elif [ "$input" == "advanced" -o "$input" == "a" ];then
-            Advanced
-
-        elif [ "$input" == "misc" -o "$input" == "m" ];then
-            Misc
-
-        elif [ "$input" == "help" -o "$input" == "?" ];then
-            Show_help
-            
-        elif [ "$input" == "quit" -o "$input" == "q" ];then
-            break
-
-        else
-            Error "$ERROR_02"
-        fi
+        echo -n "RAIDA Tester> " && read opt
+        case $opt in
+            (e|echo)
+                Process_request _echo
+                ;;
+            (d|detect)
+                Process_request _detect
+                ;;
+            (g|get_ticket)
+                Process_request _get_ticket
+                ;;
+            (h|hints)
+                Process_request _hints
+                ;;
+            (f|fix)
+                Process_request _fix
+                ;;
+            (md|multi_detect)
+                Process_request _multi_detect
+                ;;
+            (md2|multi_detect+)
+                Process_request _multi_detect2
+                ;;
+            (mg|multi_get_ticket)
+                Process_request _multi_get_ticket
+                ;;
+            (mh|multi_hints)
+                Process_request _multi_hints
+                ;;
+            (mf|multi_fix)
+                isFix4Mode="true"
+                Process_request _multi_fix
+                ;;
+            (sw|skywallet)
+                Ask_raida_node "_SkyWallet" "SKYWALLET(sw)"
+                ;;
+            (a|advanced)
+                Advanced
+                ;;
+            (m|misc)
+                Misc
+                ;;
+            (\?|help)
+                Show_help
+                ;;
+            (q|quit)
+                break
+                ;;
+            (*)
+                Error "$ERROR_02"
+                ;;
+        esac 
     done
+
 }
 
 Check_CMD() {
@@ -3281,8 +3282,6 @@ ToLower() {
 ToUpper() {
    echo $1 | tr "[:lower:]" "[:upper:]"
 }
-
-
 
 
 cd $WORKDIR
