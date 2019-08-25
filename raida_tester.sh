@@ -137,12 +137,12 @@ The following packages must be already installed on the system.
 Recommend: To install these packages, you can run the commands:
  #> yum install curl jq bind-utils python bc
  or
- #> apt-get install curl jq dnsutils python bc
+ #> sudo apt-get update; sudo apt-get install curl jq dnsutils python bc
 
 :Install and Upgrade
  $> git clone https://github.com/a-lang/RAIDA_Tester.git
 
- How to Upgrade existing code
+ How to Upgrade existing code to up-to-date
  $> cd RAIDA_Tester/
  $> git pull
 
@@ -191,7 +191,7 @@ NOTE: The following packages must be already installed on the system.
 Recommend: To install these packages, you can run the commands:
  yum install curl jq bind-utils python bc
  or
- apt-get install curl jq dnsutils python bc
+ sudo apt-get update; sudo apt-get install curl jq dnsutils python bc
   
 EOF
 }
