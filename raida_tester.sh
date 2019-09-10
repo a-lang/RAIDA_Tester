@@ -12,7 +12,7 @@
 #
 
 # Variables
-VERSION="190825"
+VERSION="190910"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -1955,6 +1955,13 @@ _multi_get_ticket(){
     http_retval=$?
     end_s=$(Timer)
     elapsed=$(( (end_s-start_s)/1000000 ))
+
+    if [ $DEBUG -eq 1 ]; then
+        Log "[_multi_get_ticket] " "POST_URL: $raida_url "
+        Log "[_multi_get_ticket] " "POST_DATA: $post_data"
+        Log "[_multi_get_ticket] " "POST_RESPONSE: $http_response"
+        Log "[_multi_get_ticket] " "End of POST"
+    fi
 
     if [ $http_retval -eq 0 ];then
         status=$(echo $http_response | $JQ_CMD -r '.[0].status')
