@@ -12,7 +12,7 @@
 #
 
 # Variables
-VERSION="190910"
+VERSION="191012"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -2958,6 +2958,7 @@ Coin_validation(){
         is_json=$? 
         if [ $is_json -eq 0 ];then # Is JSON
             echo -e "Loading test coins: $WORKDIR/$file"
+            List_denoms "$file"
             return 0
         else # Not JSON
             Error "Error: Test Coin File seems to be Wrong Format ($WORKDIR/$file)"
@@ -2967,6 +2968,48 @@ Coin_validation(){
         Error "Error: Testcoin File Not Found ($WORKDIR/$file)"
         return 1
     fi
+}
+
+List_denoms(){
+    local coinfile sn k denoms_1 denoms_5 denoms_25 denoms_100 denoms_250
+    local array_sn
+    coinfile="$1"
+    sn=`$JQ_CMD -r '.cloudcoin[].sn' $coinfile`
+    array_sn=( $sn )
+
+    denoms_1=0
+    denoms_5=0
+    denoms_25=0
+    denoms_100=0
+    denoms_250=0
+    for k in "${array_sn[@]}"
+    do
+        case "$(Get_denom $k)" in
+            1)
+                ((denoms_1++))
+                ;;
+            5)
+                ((denoms_5++))
+                ;;
+            25)
+                ((denoms_25++))
+                ;;
+            100)
+                ((denoms_100++))
+                ;;
+            250)
+                ((denoms_250++))
+                ;;
+        esac
+    done
+
+    echo -n "Denominations: "
+    [[ $denoms_1 -ne 0 ]] && echo -n "1s:$denoms_1 "
+    [[ $denoms_5 -ne 0 ]] && echo -n "5s:$denoms_5 "
+    [[ $denoms_25 -ne 0 ]] && echo -n "25s:$denoms_25 "
+    [[ $denoms_100 -ne 0 ]] && echo -n "100s:$denoms_100 "
+    [[ $denoms_250 -ne 0 ]] && echo -n "250s:$denoms_250 "
+    echo
 }
 
 addr_validation(){
