@@ -12,7 +12,7 @@
 #
 
 # Variables
-VERSION="191012"
+VERSION="191014"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -306,7 +306,7 @@ Advanced(){
         echo "                            6.Fix 7.Multi_Detect 8.Multi_Ticket"
         echo "NOTE: This process may take a few mins to check all nodes please be patient until all checks done."
         echo -n "$prompt> " && read input
-        if [ $input -ge 1 -a $input -le 7 ] 2>/dev/null ;then
+        if [ $input -ge 1 -a $input -le 8 ] 2>/dev/null ;then
             case "$input" in
                 1)
                      _all_echo
