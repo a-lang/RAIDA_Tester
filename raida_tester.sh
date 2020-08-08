@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
-# 
+#
 # Created: 2017-3-20, A-Lang
-# 
+#
 # Change Logs:
 #   17/10/14 - Added test for multi_detect
 #   17/10/15 - Added detection for version
 #   18/04/10 - JSON validation for ECHO
-#   19/05/25 - Added datetime for Advanced ECHO 
+#   19/05/25 - Added datetime for Advanced ECHO
 #   19/06/09 - Added multi_fix
 #   19/06/27 - Update _all_echo
 #
 
 # Variables
-VERSION="191030"
+VERSION="200808"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -20,13 +20,13 @@ TESTCOINFILE4="testcoin_id1_x1.stack"
 TESTCOINFILE5="testcoin_id2_x1.stack"
 TESTCOINFILE6="testcoin_bank_x3.stack"
 # for Debgugging only
-DEBUG=1    # True:1 , False:0
+DEBUG=0 # True:1 , False:0
 LOG_FILE="debug.log"
 #
 RAIDA_NUMS=25
 MAX_LATENCY=15
 MAX_POST_NOTES=400
-WARN_MS=10000    # millisecond
+WARN_MS=10000 # millisecond
 _REST_='\033[0m'
 _GREEN_='\033[32m'
 _RED_='\033[31m'
@@ -37,14 +37,13 @@ CURL_OPT_multi="-qSfs -m 60 -X POST"
 JQ_CMD="jq"
 GETIP_CMD="dig"
 PYTHON_CMD="python"
+NOTIFY_CMD="notify-send"
 HTML_DIR="html"
 
-
 # Don't change the following lines
-WORKDIR="$( cd $( dirname "$0" ) && pwd )"
-RUNNINGOS=$(`echo uname` | tr '[a-z]' '[A-Z]')
-RUNNINGARCH=$(`echo uname -m` | tr '[a-z]' '[A-Z]')
-
+WORKDIR="$(cd $(dirname "$0") && pwd)"
+RUNNINGOS=$($(echo uname) | tr '[a-z]' '[A-Z]')
+RUNNINGARCH=$($(echo uname -m) | tr '[a-z]' '[A-Z]')
 
 # Strings
 STRING_01="Could not Check hints because get_ticket service failed to get a ticket. Fix get_ticket first."
@@ -64,8 +63,8 @@ ERROR_07="Error: Test failed, run the get_ticket to see more details."
 #########################################
 # Functions
 
-Show_logo(){
-    printf  '
+Show_logo() {
+    printf '
               ________                ________      _
              / ____/ /___  __  ______/ / ____/___  (_)___
             / /   / / __ \/ / / / __  / /   / __ \/ / __ \
@@ -75,7 +74,7 @@ Show_logo(){
 '
 }
 
-Show_head(){
+Show_head() {
     clear
     Show_logo
     cat <<EOF
@@ -87,11 +86,11 @@ Show_head(){
 # You have to have several authentic CloudCoin .stack files called          #
 # 'testcoin*.stack' in the same folder as this program to run tests.        #
 #############################################################################
-[Version: ${VERSION}][Debug: `[ $DEBUG -eq 1 ] && echo "ON" || echo "OFF"`]
+[Version: ${VERSION}]|[Debug: $([ $DEBUG -eq 1 ] && echo "ON" || echo "OFF")]
 EOF
 }
 
-Show_menu(){
+Show_menu() {
     cat <<EOF
 ===================================
 RAIDA Tester Commands Available:
@@ -114,12 +113,12 @@ EOF
 
 }
 
-Show_help(){
+Show_help() {
     less <<EOF
 ##############################################################
 ###                                                        ###
 ###                  RAIDA Tester Help                     ###
-###                                                        ###
+###                  Version: $VERSION                       ###
 ###                  <Enter q to exit>                     ###
 ##############################################################
 
@@ -161,6 +160,8 @@ testcoin_id1_x1.stack   sw            1
 testcoin_id2_x1.stack   sw            1
 testcoin_bank_x3.stack  sw            3-200
 
+NOTE: Please don't copy the coin files to each other otherwise
+      they can be counterfeited.
 
 :How to Enable the Debug mode
 Find the line below, change it to 1
@@ -173,13 +174,13 @@ The debug info will be stored in the file <debug.log>.
 EOF
 }
 
-Error(){
+Error() {
     message="$1"
     message_color="$_RED_$message$_REST_"
     echo -e "$message_color\n"
 }
 
-Show_requirement(){
+Show_requirement() {
     cat <<EOF
 NOTE: The following packages must be already installed on the system.
  * Curl
@@ -196,66 +197,64 @@ Recommend: To install these packages, you can run the commands:
 EOF
 }
 
-Main()
-{
+Main() {
     local opt
     opt=""
-    while [ "$input" != "quit" ]
-    do
+    while [ "$input" != "quit" ]; do
         Show_menu
 
         echo -n "RAIDA Tester> " && read opt
         case $opt in
-            (e|echo)
-                Process_request _echo
-                ;;
-            (d|detect)
-                Process_request _detect
-                ;;
-            (g|get_ticket)
-                Process_request _get_ticket
-                ;;
-            (h|hints)
-                Process_request _hints
-                ;;
-            (f|fix)
-                Process_request _fix
-                ;;
-            (md|multi_detect)
-                Process_request _multi_detect
-                ;;
-            (md2|multi_detect+)
-                Process_request _multi_detect2
-                ;;
-            (mg|multi_get_ticket)
-                Process_request _multi_get_ticket
-                ;;
-            (mh|multi_hints)
-                Process_request _multi_hints
-                ;;
-            (mf|multi_fix)
-                isFix4Mode="true"
-                Process_request _multi_fix
-                ;;
-            (sw|skywallet)
-                Ask_raida_node "_SkyWallet" "SKYWALLET(sw)"
-                ;;
-            (a|advanced)
-                Advanced
-                ;;
-            (m|misc)
-                Misc
-                ;;
-            (\?|help)
-                Show_help
-                ;;
-            (q|quit)
-                break
-                ;;
-            (*)
-                Error "$ERROR_02"
-                ;;
-        esac 
+        e | echo)
+            Process_request _echo
+            ;;
+        d | detect)
+            Process_request _detect
+            ;;
+        g | get_ticket)
+            Process_request _get_ticket
+            ;;
+        h | hints)
+            Process_request _hints
+            ;;
+        f | fix)
+            Process_request _fix
+            ;;
+        md | multi_detect)
+            Process_request _multi_detect
+            ;;
+        md2 | multi_detect+)
+            Process_request _multi_detect2
+            ;;
+        mg | multi_get_ticket)
+            Process_request _multi_get_ticket
+            ;;
+        mh | multi_hints)
+            Process_request _multi_hints
+            ;;
+        mf | multi_fix)
+            isFix4Mode="true"
+            Process_request _multi_fix
+            ;;
+        sw | skywallet)
+            Ask_raida_node "_SkyWallet" "SKYWALLET(sw)"
+            ;;
+        a | advanced)
+            Advanced
+            ;;
+        m | misc)
+            Misc
+            ;;
+        \? | help)
+            Show_help
+            ;;
+        q | quit)
+            break
+            ;;
+        *)
+            Error "$ERROR_02"
+            ;;
+        esac
     done
 
 }
@@ -264,77 +263,77 @@ Check_CMD() {
     local cmd
     cmd=$1
     [ $(which $cmd) ] || {
-        Show_requirement
-        exit 1
+        #Show_requirement
+        #exit 1
+        return 1
     }
+    return 0
 }
 
-
-Timer(){
-	if [ "$RUNNINGOS" == "LINUX" ];then
-		seconds=`date +%s%N`
-	else
-		seconds=`ruby -e 'puts "%.9f" % Time.now' | tr -d '.'`
-	fi
-	echo $seconds 
+Timer() {
+    if [ "$RUNNINGOS" == "LINUX" ]; then
+        seconds=$(date +%s%N)
+    else
+        seconds=$(ruby -e 'puts "%.9f" % Time.now' | tr -d '.')
+    fi
+    echo $seconds
 }
 
-Get_denom(){
+Get_denom() {
     sn=$1
     denom=0
-    if [ $sn -gt 0 -a $sn -lt 2097153 ];then
+    if [ $sn -gt 0 -a $sn -lt 2097153 ]; then
         denom=1
-    elif [ $sn -lt 4194305 ];then
+    elif [ $sn -lt 4194305 ]; then
         denom=5
-    elif [ $sn -lt 6291457 ];then
+    elif [ $sn -lt 6291457 ]; then
         denom=25
-    elif [ $sn -lt 14680065 ];then
+    elif [ $sn -lt 14680065 ]; then
         denom=100
-    elif [ $sn -lt 16777217 ];then
+    elif [ $sn -lt 16777217 ]; then
         denom=250
     fi
     echo $denom
 }
 
-Advanced(){
+Advanced() {
     local prompt input
     input=""
     prompt="ADVANCED(a)"
-    while true
-    do
+    while true; do
         echo "Test All RAIDA Nodes [1-7]: 1.Echo 2.Echo2 3.Detect 4.Ticket 5.Hints q.Exit"
         echo "                            6.Fix 7.Multi_Detect 8.Multi_Ticket"
         echo "NOTE: This process may take a few mins to check all nodes please be patient until all checks done."
         echo -n "$prompt> " && read input
-        if [ $input -ge 1 -a $input -le 8 ] 2>/dev/null ;then
+        if [ $input -ge 1 -a $input -le 8 ] 2>/dev/null; then
             case "$input" in
-                1)
-                     _all_echo
-                     ;;
-                2)
-                     _all_echo2
-                     ;;
-                3)
-                    _all_detect
-                     ;;
-                4)
-                    _all_ticket
-                    ;;
-                5)
-                    _all_hints
-                    ;;
-                6)
-                    _all_fix
-                    ;; 
-                7)
-                    _all_multi_detect
-                    ;;
-                8)
-                    _all_multi_get_ticket
-                    ;;
+            1)
+                _all_echo
+                ;;
+            2)
+                _all_echo2
+                ;;
+            3)
+                _all_detect
+                ;;
+            4)
+                _all_ticket
+                ;;
+            5)
+                _all_hints
+                ;;
+            6)
+                _all_fix
+                ;;
+            7)
+                _all_multi_detect
+                ;;
+            8)
+                _all_multi_get_ticket
+                ;;
             esac
 
-        elif [ "$input" == "q" ] 2>/dev/null ;then
+        elif [ "$input" == "q" ] 2>/dev/null; then
             break
 
         else
@@ -344,34 +343,33 @@ Advanced(){
     done
 }
 
-Misc(){
+Misc() {
     local prompt input
     input=""
     prompt="MISC(m)"
-    while true
-    do
+    while true; do
         echo "Select the function [1-5]: 1.Fix-Fracked 2.IP->SN 3.SN->IP 4.Weather 5.SpeedTest q.Exit"
         echo "                           "
         echo -n "$prompt> " && read input
-        if [ $input -ge 1 -a $input -le 5 ] 2>/dev/null ;then
+        if [ $input -ge 1 -a $input -le 5 ] 2>/dev/null; then
             case "$input" in
-                1)
-                     _fix_fracked_coins $prompt
-                     ;;
-                2)
-                    _IP2SN $prompt
-                    ;;
-                3)
-                    _SN2IP $prompt
-                    ;;
-                4)
-                    _Weather $prompt
-                    ;;
-                5)
-                    _SpeedTest $prompt
-                    ;;
+            1)
+                _fix_fracked_coins $prompt
+                ;;
+            2)
+                _IP2SN $prompt
+                ;;
+            3)
+                _SN2IP $prompt
+                ;;
+            4)
+                _Weather $prompt
+                ;;
+            5)
+                _SpeedTest $prompt
+                ;;
             esac
-        elif [ "$input" == "q" ] 2>/dev/null ;then
+        elif [ "$input" == "q" ] 2>/dev/null; then
             break
 
         else
@@ -381,21 +379,20 @@ Misc(){
     done
 }
 
-Ask_raida_node(){  # Ask_raida "Call-to-Function" "Prompt-String"
-    local func prompt input 
+Ask_raida_node() { # Ask_raida "Call-to-Function" "Prompt-String"
+    local func prompt input
     func="$1"
     prompt="$2"
     input=""
 
-    while [ "$input" != "$RAIDA_NUMS" ]
-    do
+    while [ "$input" != "$RAIDA_NUMS" ]; do
         echo
         echo "What RAIDA# do you want to test $prompt? (Enter q to end)"
         echo -n "$prompt[0-$((RAIDA_NUMS - 1))]> " && read input
-        if [ $input -ge 0 -a $input -lt $RAIDA_NUMS  ] 2>/dev/null;then
+        if [ $input -ge 0 -a $input -lt $RAIDA_NUMS ] 2>/dev/null; then
             $func $input
 
-        elif [ "$input" == "q" ] 2>/dev/null;then
+        elif [ "$input" == "q" ] 2>/dev/null; then
             return
         else
             Error "$ERROR_02"
@@ -403,46 +400,44 @@ Ask_raida_node(){  # Ask_raida "Call-to-Function" "Prompt-String"
     done
 }
 
-Ask_coin_file(){
-    local prompt input 
+Ask_coin_file() {
+    local prompt input
     local n coins_list
     prompt="$1"
     input=""
 
-    coins_list=( $(Get_coin_files) )
+    coins_list=($(Get_coin_files))
     coins_count=${#coins_list[@]}
     # for debug only
     #echo "coins_list-> ${coins_list[@]}"
     #echo "coins_count-> $coins_count"
-    if [ $coins_count -eq 0 ];then
+    if [ $coins_count -eq 0 ]; then
         Error "$ERROR_01"
         return 1
     fi
 
-    for ((n=0;n<$coins_count;n++))
-    do
-        echo "[$((n+1))] ${coins_list[$n]}"
+    for ((n = 0; n < $coins_count; n++)); do
+        echo "[$((n + 1))] ${coins_list[$n]}"
     done
 
     GET_COINFILE=""
-    while [ "$input" != "q" ]
-    do
+    while [ "$input" != "q" ]; do
         echo "NOTE: The filename is not supposed to contain any space characters."
         echo
         echo "Please select the coin file. (Enter q to end)"
         echo -n "$prompt[1-$coins_count]> " && read input
-        if [ $input -ge 1 -a $input -le $coins_count  ] 2>/dev/null;then
-            GET_COINFILE="${coins_list[$((input-1))]}"
+        if [ $input -ge 1 -a $input -le $coins_count ] 2>/dev/null; then
+            GET_COINFILE="${coins_list[$((input - 1))]}"
             return 0
-        elif [ "$input" != "q" ];then 
+        elif [ "$input" != "q" ]; then
             Error "$ERROR_02"
         fi
     done
-    return 1 
+    return 1
 
 }
 
-_fix_fracked_coins(){
+_fix_fracked_coins() {
     local coinfile input1 input2 func node_num
     local prompt1 prompt2 prompt3 prompt4
     local sn sns_list
@@ -450,7 +445,7 @@ _fix_fracked_coins(){
     coinfile=""
     prompt1="$1>FIX_COINS"
     Ask_coin_file "$prompt1"
-    if [ $? -eq 0 ];then
+    if [ $? -eq 0 ]; then
         coinfile="$GET_COINFILE"
         prompt2="$prompt1>$coinfile"
     else
@@ -458,88 +453,89 @@ _fix_fracked_coins(){
     fi
 
     # Check if the coin file with over 200 notes
-    sn=`$JQ_CMD -r '.cloudcoin[].sn' $coinfile`
-    sns_list=( $sn )
-    if [ ${#sns_list[@]} -gt 200 ];then
+    sn=$($JQ_CMD -r '.cloudcoin[].sn' $coinfile)
+    sns_list=($sn)
+    if [ ${#sns_list[@]} -gt 200 ]; then
         Error "Error: The tester program is unable to handle more than 200 notes in the $coinfile!"
         return 1
     fi
-    
+
     input1=""
-    while [ "$input1" != "q" ]
-    do
+    while [ "$input1" != "q" ]; do
         echo "[1] multi detect"
         echo "[2] multi fix"
         echo
         echo "Please select the function. (Enter q to end)"
         echo -n "$prompt2[1-2]> " && read input1
-        if [ $input1 -ge 1 -a $input1 -le 2  ] 2>/dev/null;then
+        if [ $input1 -ge 1 -a $input1 -le 2 ] 2>/dev/null; then
             case "$input1" in
-                1)
-                    prompt3="$prompt2>_multi_detect"
-                    func="_multi_detect"
-                    ;;
-                2)
-                    prompt3="$prompt2>_multi_fix"
-                    isFix4Mode="true"
-                    func="_multi_fix"
-                    ;;
+            1)
+                prompt3="$prompt2>_multi_detect"
+                func="_multi_detect"
+                ;;
+            2)
+                prompt3="$prompt2>_multi_fix"
+                isFix4Mode="true"
+                func="_multi_fix"
+                ;;
             esac
             input2=""
-            while [ "$input2" != "q" ]
-            do
+            while [ "$input2" != "q" ]; do
                 echo
                 echo "Please select the RAIDA node. (Enter q to go back)"
-                echo -n "$prompt3[0-$((RAIDA_NUMS-1))]> " && read input2
-                if [ $input2 -ge 0 -a $input2 -le $((RAIDA_NUMS-1)) ] 2>/dev/null;then
+                echo -n "$prompt3[0-$((RAIDA_NUMS - 1))]> " && read input2
+                if [ $input2 -ge 0 -a $input2 -le $((RAIDA_NUMS - 1)) ] 2>/dev/null; then
                     node_num=$input2
                     #echo "Debug: $func $node_num $coinfile"
                     $func "$node_num" "$coinfile"
 
-                elif [ "$input2" != "q" ];then 
+                elif [ "$input2" != "q" ]; then
                     Error "$ERROR_02"
                 fi
             done
-        elif [ "$input1" != "q" ];then 
+        elif [ "$input1" != "q" ]; then
             Error "$ERROR_02"
         fi
     done
 
 }
 
-_IP2SN(){
+_IP2SN() {
     local input addr ip
     local prompt
     prompt="$1>IP-SN"
 
-    Check_CMD $GETIP_CMD
-    while [ "$input" != "q" ]
-    do
+    if ! Check_CMD $GETIP_CMD; then
+        Show_requirement
+        exit
+    fi
+
+    while [ "$input" != "q" ]; do
         echo
-        echo "Please input the address to the SkyWallet. (Enter q to go back)" 
+        echo "Please input the address to the SkyWallet. (Enter q to go back)"
         echo -n "$prompt[*.skywallet.cc]> " && read input
-        if [ -n "$input" -a "$input" != "q" ] 2>/dev/null;then
+        if [ -n "$input" -a "$input" != "q" ] 2>/dev/null; then
             addr=$(addr_validation "$input")
-            if [ -z "$addr" ];then
+            if [ -z "$addr" ]; then
                 Error "$ERROR_02"
                 continue
             fi
 
-            if ! Check_Internet;then
+            if ! Check_Internet; then
                 echo
                 Error " Internet is not connected!"
                 continue
             fi
-            
+
             addr=$(echo $addr | cut -d: -f2)
             type=$(echo $addr | cut -d: -f1)
-            if [ "$type" == "IP" ];then
+            if [ "$type" == "IP" ]; then
                 ip=$addr
             else
                 ip=$(get_ip "$addr")
             fi
-            
-            if [ -z "$ip" ];then
+
+            if [ -z "$ip" ]; then
                 echo
                 Error " The SkyWallet ($addr) is unavailable!"
                 continue
@@ -558,38 +554,36 @@ _SN2IP() {
     local sn ip input
     prompt="$1>SN-IP"
 
-    while [ "$input" != "q" ]
-    do
+    while [ "$input" != "q" ]; do
         echo
-        echo "Please input the SN that is converted. (Enter q to go back)" 
+        echo "Please input the SN that is converted. (Enter q to go back)"
         echo -n "$prompt[1-16777215]> " && read input
-        if [ $input -ge 1 -a $input -le 16777215 ] 2>/dev/null;then
+        if [ $input -ge 1 -a $input -le 16777215 ] 2>/dev/null; then
             ip=$(dec2ip $input)
             ip="1.${ip#*.}"
             echo
             echo -e "$_GREEN_ The IP for the SN ($input) is: $_BOLD_$ip$_REST_"
-        elif [ "$input" != "q" ];then 
+        elif [ "$input" != "q" ]; then
             Error "$ERROR_02"
         fi
     done
 }
 
 _Weather() {
-    local prompt url input 
+    local prompt url input
     local city
     prompt="$1>WEATHER"
-    if ! Check_Internet;then
+    if ! Check_Internet; then
         echo
         Error " Internet is not connected!"
         continue
     fi
 
-    while [ "$input" != "q" ]
-    do
+    while [ "$input" != "q" ]; do
         echo
-        echo "Please input your city. (Enter q to go back)" 
+        echo "Please input your city. (Enter q to go back)"
         echo -n "$prompt[Taipei]> " && read input
-        if [ -n "$input" -a "$input" != "q" ] 2>/dev/null;then
+        if [ -n "$input" -a "$input" != "q" ] 2>/dev/null; then
             city=$(ToLower $input)
             url="http://wttr.in/$city"
             $CURL_CMD $url
@@ -601,7 +595,11 @@ _Weather() {
 }
 
 _SpeedTest() {
-    Check_CMD $PYTHON_CMD
+    if ! Check_CMD $PYTHON_CMD; then
+        Show_requirement
+        exit
+    fi
+
     $CURL_CMD -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | $PYTHON_CMD -
     echo
 }
@@ -613,54 +611,53 @@ _SkyWallet() {
     raida="raida$node_num"
     prompt="RAIDA($node_num)-SW"
 
-    while true
-    do
+    while true; do
         echo "Test functions : 1.Multi_Detect 2.Show_ID1 3.Show_ID2 4.Send_ID1 5.Send_ID2 q.Exit"
         echo "[1-11]           6.Receive_ID1 7.Receive_ID2 8.Transfer_ID1 9.Transfer_ID2 10.Rename_Tag_ID1"
         echo "                 11.Rename_Tag_ID2"
         echo -n "$prompt> " && read input
-        if [ $input -ge 1 -a $input -le 11 ] 2>/dev/null;then
+        if [ $input -ge 1 -a $input -le 11 ] 2>/dev/null; then
             case "$input" in
-                1)
-                     _multi_detect "$node_num" "$TESTCOINFILE6" 
-                     ;;
-                2)
-                    _SW_Show "$node_num" "$TESTCOINFILE4"
-                    ;;
-                3)
-                    _SW_Show "$node_num" "$TESTCOINFILE5"
-                    ;;
-                4)
-                    _SW_Send "$node_num" "$TESTCOINFILE4" "$TESTCOINFILE6"
-                    ;;
-                5)
-                    _SW_Send "$node_num" "$TESTCOINFILE5" "$TESTCOINFILE6"
-                    ;;
-                6)
-                    _SW_Receive "$node_num" "$TESTCOINFILE4" "$TESTCOINFILE6"
-                    ;;
-                7)
-                    _SW_Receive "$node_num" "$TESTCOINFILE5" "$TESTCOINFILE6"
-                    ;;
-                8)
-                    _SW_Transfer "$node_num" "$TESTCOINFILE4" "$TESTCOINFILE5" "$TESTCOINFILE6"
-                    ;;
-                9)
-                    _SW_Transfer "$node_num" "$TESTCOINFILE5" "$TESTCOINFILE4" "$TESTCOINFILE6"
-                    ;;
-                10)
-                    _SW_RenameTag "$node_num" "$TESTCOINFILE4"
-                    ;;
-                11)
-                    _SW_RenameTag "$node_num" "$TESTCOINFILE5"
-                    ;;
+            1)
+                _multi_detect "$node_num" "$TESTCOINFILE6"
+                ;;
+            2)
+                _SW_Show "$node_num" "$TESTCOINFILE4"
+                ;;
+            3)
+                _SW_Show "$node_num" "$TESTCOINFILE5"
+                ;;
+            4)
+                _SW_Send "$node_num" "$TESTCOINFILE4" "$TESTCOINFILE6"
+                ;;
+            5)
+                _SW_Send "$node_num" "$TESTCOINFILE5" "$TESTCOINFILE6"
+                ;;
+            6)
+                _SW_Receive "$node_num" "$TESTCOINFILE4" "$TESTCOINFILE6"
+                ;;
+            7)
+                _SW_Receive "$node_num" "$TESTCOINFILE5" "$TESTCOINFILE6"
+                ;;
+            8)
+                _SW_Transfer "$node_num" "$TESTCOINFILE4" "$TESTCOINFILE5" "$TESTCOINFILE6"
+                ;;
+            9)
+                _SW_Transfer "$node_num" "$TESTCOINFILE5" "$TESTCOINFILE4" "$TESTCOINFILE6"
+                ;;
+            10)
+                _SW_RenameTag "$node_num" "$TESTCOINFILE4"
+                ;;
+            11)
+                _SW_RenameTag "$node_num" "$TESTCOINFILE5"
+                ;;
                 #12)
                 #    isFix4Mode="true"
-                #    _multi_fix "$node_num" "$TESTCOINFILE6" 
+                #    _multi_fix "$node_num" "$TESTCOINFILE6"
                 #    ;;
 
             esac
-        elif [ "$input" == "q" ] 2>/dev/null;then
+        elif [ "$input" == "q" ] 2>/dev/null; then
             break
         else
             Error "$ERROR_02"
@@ -668,53 +665,53 @@ _SkyWallet() {
     done
 }
 
-Process_request(){
+Process_request() {
     local prompt input option
     input=""
     option="$1"
 
     case "$option" in
-        _echo)
-            prompt="ECHO(e)"
-            ;;
-        _detect)
-            prompt="DETECT(d)"
-            ;;
-        _get_ticket)
-            prompt="GET_TICKET(g)"
-            ;;
-        _hints)
-            prompt="HINTS(h)"
-            ;;
-        _fix)
-            prompt="FIX(f)"
-            ;;
-        _multi_detect)
-            prompt="MULTI_DETECT(md)"
-            ;;
-        _multi_detect2)
-            prompt="MULTI_DETECT+(md2)"
-            ;;
-        _multi_get_ticket)
-            prompt="MULTI_GET_TICKET(mg)"
-            ;;
-        _multi_hints)
-            prompt="MULTI_HINTS(mh)"
-            ;;
-        _multi_fix)
-            if [ "$isFix4Mode" = "true" ];then
-                prompt="MULTI_FIX4(mf)"
-            else
-                prompt="MULTI_FIX3(mf)"
-            fi
-            ;;   
+    _echo)
+        prompt="ECHO(e)"
+        ;;
+    _detect)
+        prompt="DETECT(d)"
+        ;;
+    _get_ticket)
+        prompt="GET_TICKET(g)"
+        ;;
+    _hints)
+        prompt="HINTS(h)"
+        ;;
+    _fix)
+        prompt="FIX(f)"
+        ;;
+    _multi_detect)
+        prompt="MULTI_DETECT(md)"
+        ;;
+    _multi_detect2)
+        prompt="MULTI_DETECT+(md2)"
+        ;;
+    _multi_get_ticket)
+        prompt="MULTI_GET_TICKET(mg)"
+        ;;
+    _multi_hints)
+        prompt="MULTI_HINTS(mh)"
+        ;;
+    _multi_fix)
+        if [ "$isFix4Mode" = "true" ]; then
+            prompt="MULTI_FIX4(mf)"
+        else
+            prompt="MULTI_FIX3(mf)"
+        fi
+        ;;
     esac
 
     Ask_raida_node "$option" "$prompt"
-    
+
 }
 
-_all_echo(){
+_all_echo() {
     local n
     local version
 
@@ -723,25 +720,24 @@ _all_echo(){
     #[ $retval -eq 1 ] && return 1 # html template file not found
 
     echo "ECHO Results: "
-    for ((n=0;n<$RAIDA_NUMS;n++))
-    do
+    for ((n = 0; n < $RAIDA_NUMS; n++)); do
         _echo $n >/dev/null 2>&1
         run_echo=$?
-        if [ $run_echo -eq 0 ];then
+        if [ $run_echo -eq 0 ]; then
             result="PASS"
         else
             result="${_RED_}FAIL${_REST_}"
         fi
 
-        version=$(Get_version $n) 
+        version=$(Get_version $n)
         #Output $n "v$version|time:$echo_datetime|$result" $echo_elapsed
         Output $n "v$version|time:$echo_datetime|status:$result|$echo_msg"
 
-        if [ "$result" != "PASS" ];then
+        if [ "$result" != "PASS" ]; then
             Output2 "$echo_response"
         fi
 
-        #if [ "$save_to_html" == "YES" ];then
+        ##if [ "$save_to_html" == "YES" ];then
         #    html_report="echotest.html"
         #    raida_node=$n
         #    get_status="$status"
@@ -753,24 +749,27 @@ _all_echo(){
         #    Basic_htmlreport "$html_report" "$raida_node" "$get_status" "$get_request" "$get_response" "$get_ms" "$get_ver"
         #fi
     done
-    echo;echo
+    echo
+    echo
 }
 
-_all_echo2(){
+_all_echo2() {
     local url latency seconds
 
-    Check_CMD "bc"
+    if ! Check_CMD "bc"; then
+        Show_requirement
+        exit
+    fi
 
     warn=3
     echo "ECHO: Latency) "
-    for ((n=0;n<$RAIDA_NUMS;n++))
-    do
+    for ((n = 0; n < $RAIDA_NUMS; n++)); do
         _echo $n >/dev/null 2>&1
         run_echo=$?
-        if [ $run_echo -eq 0 ];then
+        if [ $run_echo -eq 0 ]; then
             url="https://raida$n.cloudcoin.global/service/echo"
             seconds=$(Node_Latency "$url")
-            if [ $(echo "$seconds > $warn"|bc) -eq 1 ];then
+            if [ $(echo "$seconds > $warn" | bc) -eq 1 ]; then
                 latency="${_RED_}$seconds${_REST_}"
             else
                 latency=$seconds
@@ -779,22 +778,22 @@ _all_echo2(){
             latency="${_RED_}----${_REST_}"
         fi
 
-        if [ $(((($n+1)) % 3)) -ne 0 ];then
+        if [ $(((($n + 1)) % 3)) -ne 0 ]; then
             printf " %.10s %.20bs   " "RAIDA($n):  " $latency
         else
             printf " %.10s %.20bs   \n" "RAIDA($n):  " $latency
         fi
     done
-    echo;echo    
+    echo
+    echo
 }
 
-_echo()
-{
+_echo() {
     echo_response=""
     echo_elapsed=0
     echo_datetime=""
     echo_msg=""
-    
+
     echo_retval=0
     input="$1"
     raida="raida$input"
@@ -803,7 +802,7 @@ _echo()
     http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
     http_retval=$?
     end_s=$(Timer)
-    elapsed=$(( (end_s-start_s)/1000000 ))
+    elapsed=$(((end_s - start_s) / 1000000))
 
     if [ $http_retval -eq 0 ]; then
         datetime=$(echo $http_response | $JQ_CMD -r '.time' 2>/dev/null)
@@ -815,7 +814,7 @@ _echo()
         echo_retval=1
     fi
 
-    if [ "$status" == "ready" -o "$status" == "notready" ];then
+    if [ "$status" == "ready" -o "$status" == "notready" ]; then
         status_color="$_GREEN_$status$_REST_"
         response_color="$_GREEN_$http_response$_REST_"
     else
@@ -830,7 +829,7 @@ _echo()
     echo "Request: $raida_url"
     echo -e "Response: $response_color"
     echo
-    
+
     echo_response=$http_response
     echo_elapsed=$elapsed
     echo_datetime=$datetime
@@ -838,32 +837,31 @@ _echo()
     return $echo_retval
 }
 
-_all_detect(){
+_all_detect() {
     local n
 
     # Check the local testcoin file
     Coin_validation $TESTCOINFILE1
     is_testcoin=$?
-    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+    [ $is_testcoin -eq 1 ] && return 1 # testcoin file not found or with wrong format
 
     #ask_html "DETECT"
     #retval=$?
     #[ $retval -eq 1 ] && return 1 # html template file not found
 
     echo "DETECT Results: "
-    for ((n=0;n<$RAIDA_NUMS;n++))
-    do
+    for ((n = 0; n < $RAIDA_NUMS; n++)); do
         _detect $n >/dev/null 2>&1
         run_detect=$?
-        if [ $run_detect -eq 0 ];then
+        if [ $run_detect -eq 0 ]; then
             result="PASS"
         else
             result="${_RED_}FAIL${_REST_}"
-        fi 
+        fi
 
         Output $n "$result" $detect_elapsed
 
-        if [ "$result" != "PASS" ];then
+        if [ "$result" != "PASS" ]; then
             Output2 "$detect_response"
         fi
 
@@ -878,45 +876,46 @@ _all_detect(){
         #    Basic_htmlreport "$html_report" "$raida_node" "$get_status" "$get_request" "$get_response" "$get_ms"
         #fi
     done
-    echo;echo
+    echo
+    echo
 }
 
-_detect(){
+_detect() {
     detect_response=""
     detect_elapsed=0
-    
+
     # Check the local testcoin file
     Coin_validation $TESTCOINFILE1
     is_testcoin=$?
-    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+    [ $is_testcoin -eq 1 ] && return 1 # testcoin file not found or with wrong format
 
     input="$1"
     raida="raida$input"
     raida_url="https://$raida.cloudcoin.global/service/detect"
-    nn=`$JQ_CMD '.cloudcoin[].nn' $TESTCOINFILE1 | tr -d '"'`
-    sn=`$JQ_CMD '.cloudcoin[].sn' $TESTCOINFILE1 | tr -d '"'`
-    string_an=`$JQ_CMD -r '.cloudcoin[].an[]' $TESTCOINFILE1`
-    array_an=( $string_an )
+    nn=$($JQ_CMD '.cloudcoin[].nn' $TESTCOINFILE1 | tr -d '"')
+    sn=$($JQ_CMD '.cloudcoin[].sn' $TESTCOINFILE1 | tr -d '"')
+    string_an=$($JQ_CMD -r '.cloudcoin[].an[]' $TESTCOINFILE1)
+    array_an=($string_an)
     an="${array_an[$input]}"
     denom=$(Get_denom $sn)
 
     # Test the Echo
     test_echo=$(_echo $input)
     run_echo=$?
-    if [ $run_echo -eq 1 ];then
+    if [ $run_echo -eq 1 ]; then
         Error "$ERROR_05"
         status="ECHO Failed"
         detect_response=$status
         return 1
-    fi 
-            
+    fi
+
     detect_retval=0
     raida_url="$raida_url?nn=$nn&sn=$sn&an=$an&pan=$an&denomination=$denom"
     start_s=$(Timer)
     http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
     http_retval=$?
     end_s=$(Timer)
-    elapsed=$(( (end_s-start_s)/1000000 ))
+    elapsed=$(((end_s - start_s) / 1000000))
 
     if [ $http_retval -eq 0 ]; then
         status=$(echo $http_response | $JQ_CMD -r '.status')
@@ -925,7 +924,7 @@ _detect(){
         detect_retval=1
     fi
 
-    if [ "$status" == "pass" ];then
+    if [ "$status" == "pass" ]; then
         status_color="$_GREEN_$status$_REST_"
         response_color="$_GREEN_$http_response$_REST_"
     else
@@ -933,47 +932,46 @@ _detect(){
         response_color="$_RED_$http_response$_REST_"
         detect_retval=1
     fi
-            
+
     echo
     echo -e "Status: $_BOLD_$status_color"
     echo "Milliseconds: $elapsed"
     echo "Request: $raida_url"
     echo -e "Response: $response_color"
     echo
-    
+
     detect_response=$http_response
     detect_elapsed=$elapsed
     return $detect_retval
 
 }
 
-_all_ticket(){
+_all_ticket() {
     local n
 
     # Check the local testcoin file
     Coin_validation $TESTCOINFILE1
     is_testcoin=$?
-    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+    [ $is_testcoin -eq 1 ] && return 1 # testcoin file not found or with wrong format
 
     #ask_html "TICKET"
     #retval=$?
     #[ $retval -eq 1 ] && return 1 # html template file not found
 
     echo "TICKET Results: "
-    for ((n=0;n<$RAIDA_NUMS;n++))
-    do
+    for ((n = 0; n < $RAIDA_NUMS; n++)); do
         _get_ticket $n >/dev/null 2>&1
         run_ticket=$?
-        if [ $run_ticket -eq 0 ];then
+        if [ $run_ticket -eq 0 ]; then
             result="PASS"
         else
             result="${_RED_}FAIL${_REST_}"
-        fi 
-        
+        fi
+
         #printf " %.18s [%4b] (%4ims) \n" "RAIDA($n).............." "$result" $ticket_elapsed
         Output $n "$result" $ticket_elapsed
 
-        if [ "$result" != "PASS" ];then
+        if [ "$result" != "PASS" ]; then
             #printf "  %-20b \n" "--> ${_RED_}$ticket_response${_REST_}"
             Output2 "$ticket_response"
         fi
@@ -990,46 +988,47 @@ _all_ticket(){
         #fi
 
     done
-    echo;echo
+    echo
+    echo
 
 }
 
-_get_ticket(){
+_get_ticket() {
     ticket_response=""
     ticket_elapsed=0
-    
+
     # Check the local testcoin file
     Coin_validation $TESTCOINFILE1
     is_testcoin=$?
-    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+    [ $is_testcoin -eq 1 ] && return 1 # testcoin file not found or with wrong format
 
     input="$1"
     raida="raida$input"
     raida_url="https://$raida.cloudcoin.global/service/get_ticket"
-    nn=`$JQ_CMD '.cloudcoin[].nn' $TESTCOINFILE1 | tr -d '"'`
-    sn=`$JQ_CMD '.cloudcoin[].sn' $TESTCOINFILE1 | tr -d '"'`
-    string_an=`$JQ_CMD -r '.cloudcoin[].an[]' $TESTCOINFILE1`
-    array_an=( $string_an )
+    nn=$($JQ_CMD '.cloudcoin[].nn' $TESTCOINFILE1 | tr -d '"')
+    sn=$($JQ_CMD '.cloudcoin[].sn' $TESTCOINFILE1 | tr -d '"')
+    string_an=$($JQ_CMD -r '.cloudcoin[].an[]' $TESTCOINFILE1)
+    array_an=($string_an)
     an="${array_an[$input]}"
     denom=$(Get_denom $sn)
 
     # Test the Detect
     test_detect=$(_detect $input)
     run_detect=$?
-    if [ $run_detect -eq 1 ];then
+    if [ $run_detect -eq 1 ]; then
         Error "$ERROR_06"
         status="DETECT Failed"
         ticket_response=$status
         return 1
-    fi 
-    
-    get_ticket_retval=0        
+    fi
+
+    get_ticket_retval=0
     raida_url="$raida_url?nn=$nn&sn=$sn&an=$an&pan=$an&denomination=$denom"
     start_s=$(Timer)
     http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
     http_retval=$?
     end_s=$(Timer)
-    elapsed=$(( (end_s-start_s)/1000000 ))
+    elapsed=$(((end_s - start_s) / 1000000))
 
     if [ $http_retval -eq 0 ]; then
         status=$(echo $http_response | $JQ_CMD -r '.status')
@@ -1037,8 +1036,8 @@ _get_ticket(){
         status="error"
         get_ticket_retval=1
     fi
-            
-    if [ "$status" == "ticket" ];then
+
+    if [ "$status" == "ticket" ]; then
         status_color="$_GREEN_$status$_REST_"
         response_color="$_GREEN_$http_response$_REST_"
     else
@@ -1046,53 +1045,52 @@ _get_ticket(){
         response_color="$_RED_$http_response$_REST_"
         get_ticket_retval=1
     fi
-            
+
     echo
     echo -e "Status: $_BOLD_$status_color"
     echo "Milliseconds: $elapsed"
     echo "Request: $raida_url"
     echo -e "Response: $response_color"
     echo
-    
+
     ticket_response=$http_response
     ticket_elapsed=$elapsed
     return $get_ticket_retval
 
 }
 
-_all_hints(){
+_all_hints() {
     local n
 
     # Check the local testcoin file
     Coin_validation $TESTCOINFILE1
     is_testcoin=$?
-    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+    [ $is_testcoin -eq 1 ] && return 1 # testcoin file not found or with wrong format
 
     #ask_html "HINTS"
     #retval=$?
     #[ $retval -eq 1 ] && return 1 # html template file not found
 
     echo "HINTS Results: "
-    for ((n=0;n<$RAIDA_NUMS;n++))
-    do
-        _hints $n > /dev/null 2>&1
+    for ((n = 0; n < $RAIDA_NUMS; n++)); do
+        _hints $n >/dev/null 2>&1
         run_hints=$?
-        if [ $run_hints -eq 0 ];then
+        if [ $run_hints -eq 0 ]; then
             result="PASS"
-            if [ $ret_hints_ms -gt $MAX_LATENCY -o $ret_hints_ms -lt 0 ];then
+            if [ $ret_hints_ms -gt $MAX_LATENCY -o $ret_hints_ms -lt 0 ]; then
                 result="${_RED_}NOT GOOD${_REST_}"
-                
+
             fi
 
         else
             result="${_RED_}FAIL${_REST_}"
-            
-        fi 
-        
+
+        fi
+
         #printf " %.18s [%4b] (%4ims) %-12s \n" "RAIDA($n).............." "$result" $hints_elapsed "$hints_response"
         Output $n "$result" $hints_elapsed
 
-        if [ "$result" != "PASS" ];then
+        if [ "$result" != "PASS" ]; then
             #printf "  %-20b \n" "--> ${_RED_}$hints_response${_REST_}"
             Output2 "$hints_response"
         fi
@@ -1106,14 +1104,15 @@ _all_hints(){
         #    get_ms="$elapsed"
 
         #    Basic_htmlreport "$html_report" "$raida_node" "$get_status" "$get_request" "$get_response" "$get_ms"
-        #fi  
+        #fi
 
     done
-    echo;echo
+    echo
+    echo
 
 }
 
-_hints(){
+_hints() {
     local input
     local _sn
     local _ms
@@ -1124,15 +1123,14 @@ _hints(){
 
     Coin_validation $TESTCOINFILE1
     is_testcoin=$?
-    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+    [ $is_testcoin -eq 1 ] && return 1 # testcoin file not found or with wrong format
 
     input="$1"
     # Get the ticket
     echo "$STRING_03"
     Hints_ticket_request $input
     Hints_ticket_retval=$?
-    
-            
+
     if [ $Hints_ticket_retval -eq 0 ]; then
         echo "Last ticket is: $ticket"
         raida="raida$input"
@@ -1142,7 +1140,7 @@ _hints(){
         http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
         http_retval=$?
         end_s=$(Timer)
-        elapsed=$(( (end_s-start_s)/1000000 ))
+        elapsed=$(((end_s - start_s) / 1000000))
 
         if [ $http_retval -eq 0 ]; then
             _sn=$(echo $http_response | cut -d: -f1)
@@ -1182,14 +1180,14 @@ _hints(){
     return $hints_retval
 }
 
-_all_fix(){
+_all_fix() {
     local n
     local retval
-    
+
     # Check the local testcoin file
     Coin_validation $TESTCOINFILE1
     is_testcoin=$?
-    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+    [ $is_testcoin -eq 1 ] && return 1 # testcoin file not found or with wrong format
 
     #ask_html "FIX"
     #retval=$?
@@ -1198,18 +1196,18 @@ _all_fix(){
     echo
     #echo "FIX Results: [Fix1][Fix2][Fix3][Fix4] "
     printf " %.18s %30s \n" "FIX Results:" "[Fix1][Fix2][Fix3][Fix4]"
-    for ((n=0;n<$RAIDA_NUMS;n++))
-    do
+    for ((n = 0; n < $RAIDA_NUMS; n++)); do
         #echo -n "-> RAIDA#${n}: "
         printf " %.18s " "RAIDA($n).............."
-        _fix_all_corners $n  
+        _fix_all_corners $n
 
     done
-    echo;echo
+    echo
+    echo
 
 }
 
-_fix(){
+_fix() {
     local i
     local j
     local n
@@ -1218,72 +1216,68 @@ _fix(){
 
     Coin_validation $TESTCOINFILE1
     is_testcoin=$?
-    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+    [ $is_testcoin -eq 1 ] && return 1 # testcoin file not found or with wrong format
 
     fixed_server=$1
-    nn=`$JQ_CMD '.cloudcoin[].nn' $TESTCOINFILE1 | tr -d '"'`
-    sn=`$JQ_CMD '.cloudcoin[].sn' $TESTCOINFILE1 | tr -d '"'`
-    string_an=`$JQ_CMD -r '.cloudcoin[].an[]' $TESTCOINFILE1`
-    array_an=( $string_an )
+    nn=$($JQ_CMD '.cloudcoin[].nn' $TESTCOINFILE1 | tr -d '"')
+    sn=$($JQ_CMD '.cloudcoin[].sn' $TESTCOINFILE1 | tr -d '"')
+    string_an=$($JQ_CMD -r '.cloudcoin[].an[]' $TESTCOINFILE1)
+    array_an=($string_an)
     denom=$(Get_denom $sn)
-     
-    array_fix_corner1[1]=$(( fixed_server - 1))
-    array_fix_corner1[2]=$(( fixed_server - 5))
-    array_fix_corner1[3]=$(( fixed_server - 6))
-    array_fix_corner2[1]=$(( fixed_server + 1))
-    array_fix_corner2[2]=$(( fixed_server - 4))
-    array_fix_corner2[3]=$(( fixed_server - 5))
-    array_fix_corner3[1]=$(( fixed_server - 1))
-    array_fix_corner3[2]=$(( fixed_server + 4))
-    array_fix_corner3[3]=$(( fixed_server + 5))
-    array_fix_corner4[1]=$(( fixed_server + 1))
-    array_fix_corner4[2]=$(( fixed_server + 5))
-    array_fix_corner4[3]=$(( fixed_server + 6))
 
-    for ((i=1;i<=4;i++))
-    do
+    array_fix_corner1[1]=$((fixed_server - 1))
+    array_fix_corner1[2]=$((fixed_server - 5))
+    array_fix_corner1[3]=$((fixed_server - 6))
+    array_fix_corner2[1]=$((fixed_server + 1))
+    array_fix_corner2[2]=$((fixed_server - 4))
+    array_fix_corner2[3]=$((fixed_server - 5))
+    array_fix_corner3[1]=$((fixed_server - 1))
+    array_fix_corner3[2]=$((fixed_server + 4))
+    array_fix_corner3[3]=$((fixed_server + 5))
+    array_fix_corner4[1]=$((fixed_server + 1))
+    array_fix_corner4[2]=$((fixed_server + 5))
+    array_fix_corner4[3]=$((fixed_server + 6))
+
+    for ((i = 1; i <= 4; i++)); do
         array_name="array_fix_corner$i"
         n=1
-        for j in $(eval echo \${$array_name[@]})
-        do
-            if [ $j -lt 0 ];then
-                eval $array_name[$n]=$(( $j + 25))
-            elif [ $j -gt 24 ];then
-                eval $array_name[$n]=$(( $j - 25))
+        for j in $(eval echo \${$array_name[@]}); do
+            if [ $j -lt 0 ]; then
+                eval $array_name[$n]=$(($j + 25))
+            elif [ $j -gt 24 ]; then
+                eval $array_name[$n]=$(($j - 25))
             fi
             ((n++))
         done
     done
 
     input=""
-    while true
-    do
+    while true; do
         echo "What RAIDA corners do you want to use? 1.Upper-Left, 2.Upper-Right, 3.Lower-Left, 4.Lower-Right"
         echo -n "Corner[1-4]> " && read input
-        if [ $input -gt 0 -a $input -lt 5  ];then
+        if [ $input -gt 0 -a $input -lt 5 ]; then
             array_name="array_fix_corner$input"
             array_trusted_servers=$(eval echo \${$array_name[@]})
             n=1
             Fix_ticket_retval=0
 
-            for i in ${array_trusted_servers[@]}
-            do
+            for i in ${array_trusted_servers[@]}; do
                 an="${array_an[$i]}"
                 Fix_ticket_request $i $nn $sn $fixed_server $an $denom
                 retval=$?
 
-                if [ $retval -eq 0 ];then
+                if [ $retval -eq 0 ]; then
                     fromserver[$n]="$i"
                     message[$n]="$ticket"
                     get_ticket_status[$n]="$status"
                 else
                     get_ticket_status[$n]="empty"
-                    Fix_ticket_retval=1   
+                    Fix_ticket_retval=1
                 fi
 
                 ((n++))
             done
-            
+
             if [ $Fix_ticket_retval -eq 0 ]; then
                 raida="raida$fixed_server"
                 an="${array_an[$fixed_server]}"
@@ -1293,7 +1287,7 @@ _fix(){
                 http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
                 http_retval=$?
                 end_s=$(Timer)
-                elapsed=$(( (end_s-start_s)/1000000 ))
+                elapsed=$(((end_s - start_s) / 1000000))
 
                 if [ $http_retval -eq 0 ]; then
                     status=$(echo $http_response | sed 's/\\/\//g' | sed 's/.* \({.*}\)$/\1/' | $JQ_CMD -r '.status')
@@ -1302,7 +1296,7 @@ _fix(){
                     fix_retval=1
                 fi
 
-                if [ "$status" == "success" ];then
+                if [ "$status" == "success" ]; then
                     echo
                     echo -e "Status: $_BOLD_$_GREEN_$status$_REST_"
                     echo "Milliseconds: $elapsed"
@@ -1336,7 +1330,7 @@ _fix(){
 
 }
 
-_fix_all_corners(){
+_fix_all_corners() {
     local c
     local i
     local j
@@ -1353,67 +1347,62 @@ _fix_all_corners(){
     local array_allfix_http_response
 
     fixed_server=$1
-    nn=`$JQ_CMD '.cloudcoin[].nn' $TESTCOINFILE1 | tr -d '"'`
-    sn=`$JQ_CMD '.cloudcoin[].sn' $TESTCOINFILE1 | tr -d '"'`
-    string_an=`$JQ_CMD -r '.cloudcoin[].an[]' $TESTCOINFILE1`
-    array_an=( $string_an )
+    nn=$($JQ_CMD '.cloudcoin[].nn' $TESTCOINFILE1 | tr -d '"')
+    sn=$($JQ_CMD '.cloudcoin[].sn' $TESTCOINFILE1 | tr -d '"')
+    string_an=$($JQ_CMD -r '.cloudcoin[].an[]' $TESTCOINFILE1)
+    array_an=($string_an)
     denom=$(Get_denom $sn)
-     
-    array_fix_corner1[1]=$(( fixed_server - 1))
-    array_fix_corner1[2]=$(( fixed_server - 5))
-    array_fix_corner1[3]=$(( fixed_server - 6))
-    array_fix_corner2[1]=$(( fixed_server + 1))
-    array_fix_corner2[2]=$(( fixed_server - 4))
-    array_fix_corner2[3]=$(( fixed_server - 5))
-    array_fix_corner3[1]=$(( fixed_server - 1))
-    array_fix_corner3[2]=$(( fixed_server + 4))
-    array_fix_corner3[3]=$(( fixed_server + 5))
-    array_fix_corner4[1]=$(( fixed_server + 1))
-    array_fix_corner4[2]=$(( fixed_server + 5))
-    array_fix_corner4[3]=$(( fixed_server + 6))
 
-    for ((i=1;i<=4;i++))
-    do
+    array_fix_corner1[1]=$((fixed_server - 1))
+    array_fix_corner1[2]=$((fixed_server - 5))
+    array_fix_corner1[3]=$((fixed_server - 6))
+    array_fix_corner2[1]=$((fixed_server + 1))
+    array_fix_corner2[2]=$((fixed_server - 4))
+    array_fix_corner2[3]=$((fixed_server - 5))
+    array_fix_corner3[1]=$((fixed_server - 1))
+    array_fix_corner3[2]=$((fixed_server + 4))
+    array_fix_corner3[3]=$((fixed_server + 5))
+    array_fix_corner4[1]=$((fixed_server + 1))
+    array_fix_corner4[2]=$((fixed_server + 5))
+    array_fix_corner4[3]=$((fixed_server + 6))
+
+    for ((i = 1; i <= 4; i++)); do
         array_name="array_fix_corner$i"
         n=1
-        for j in $(eval echo \${$array_name[@]})
-        do
-            if [ $j -lt 0 ];then
-                eval $array_name[$n]=$(( $j + 25))
-            elif [ $j -gt 24 ];then
-                eval $array_name[$n]=$(( $j - 25))
+        for j in $(eval echo \${$array_name[@]}); do
+            if [ $j -lt 0 ]; then
+                eval $array_name[$n]=$(($j + 25))
+            elif [ $j -gt 24 ]; then
+                eval $array_name[$n]=$(($j - 25))
             fi
             ((n++))
         done
     done
 
-    
-    for ((c=1;c<=4;c++))
-    do
+    for ((c = 1; c <= 4; c++)); do
         array_name="array_fix_corner$c"
         array_trusted_servers=$(eval echo \${$array_name[@]})
         n=1
         Fix_ticket_retval=0
 
-        for i in ${array_trusted_servers[@]}
-        do
+        for i in ${array_trusted_servers[@]}; do
             an="${array_an[$i]}"
             Fix_ticket_request $i $nn $sn $fixed_server $an $denom >/dev/null 2>&1
             retval=$?
 
-            if [ $retval -eq 0 ];then
+            if [ $retval -eq 0 ]; then
                 fromserver[$n]="$i"
                 message[$n]="$ticket"
                 get_ticket_status[$n]="$status"
             else
                 get_ticket_status[$n]="empty"
-                Fix_ticket_retval=1 
-                break  
+                Fix_ticket_retval=1
+                break
             fi
 
             ((n++))
         done
-        
+
         http_response=""
         if [ $Fix_ticket_retval -eq 0 ]; then
             sleep 1
@@ -1425,7 +1414,7 @@ _fix_all_corners(){
             http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
             http_retval=$?
             end_s=$(Timer)
-            elapsed=$(( (end_s-start_s)/1000000 ))
+            elapsed=$(((end_s - start_s) / 1000000))
 
             if [ $http_retval -eq 0 ]; then
                 status=$(echo $http_response | sed 's/\\/\//g' | sed 's/.* \({.*}\)$/\1/' | $JQ_CMD -r '.status')
@@ -1435,7 +1424,7 @@ _fix_all_corners(){
                 fix_retval=1
             fi
 
-            if [ "$status" != "success" ];then
+            if [ "$status" != "success" ]; then
                 fix_retval=1
                 array_allfix_http_response+=("$http_response")
             fi
@@ -1444,11 +1433,11 @@ _fix_all_corners(){
             fix_retval=1
             status="empty ticket"
             elapsed=0
-            array_allfix_http_response+=("${status}") 
+            array_allfix_http_response+=("${status}")
 
         fi
-        
-        if [ $fix_retval -eq 0 ];then
+
+        if [ $fix_retval -eq 0 ]; then
             [ $c -eq 4 ] && echo " PASS " || echo -n " PASS "
         else
             [ $c -eq 4 ] && echo -e "${_RED_}*FAIL*${_REST_}" || echo -e -n "${_RED_}*FAIL*${_REST_}"
@@ -1456,50 +1445,48 @@ _fix_all_corners(){
 
     done
 
-    for k in "${array_allfix_http_response[@]}"
-    do
+    for k in "${array_allfix_http_response[@]}"; do
         Output2 "$k"
     done
 
 }
 
-
-_all_multi_detect(){
-    local n run    
+_all_multi_detect() {
+    local n run
 
     # Check the testcoin file
     Coin_validation $TESTCOINFILE2
     is_testcoin=$?
-    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+    [ $is_testcoin -eq 1 ] && return 1 # testcoin file not found or with wrong format
 
     echo "MULTI_DETECT Results: "
-    for ((n=0;n<$RAIDA_NUMS;n++))
-    do
+    for ((n = 0; n < $RAIDA_NUMS; n++)); do
         _multi_detect $n >/dev/null 2>&1
         run=$?
-        if [ $run -eq 0 ];then
+        if [ $run -eq 0 ]; then
             result="PASS"
         else
             result="${_RED_}FAIL${_REST_}"
-        fi 
+        fi
 
         Output $n "$result" $multi_detect_elapsed
 
-        if [ "$result" != "PASS" ];then
+        if [ "$result" != "PASS" ]; then
             Output2 "$mult_detect_response"
         fi
 
     done
-    echo;echo
+    echo
+    echo
 
 }
 
-_multi_detect(){
+_multi_detect() {
     unset array_nn
     unset array_sn
     unset array_an
     unset array_denom
-    local s n a d 
+    local s n a d
     local input coinfile
 
     input="$1"
@@ -1512,20 +1499,19 @@ _multi_detect(){
     # Check the testcoin file
     Coin_validation $coinfile
     is_testcoin=$?
-    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+    [ $is_testcoin -eq 1 ] && return 1 # testcoin file not found or with wrong format
 
     raida="raida$input"
     raida_url="https://$raida.cloudcoin.global/service/multi_detect"
-    nn=`$JQ_CMD -r '.cloudcoin[].nn' $coinfile`
-    sn=`$JQ_CMD -r '.cloudcoin[].sn' $coinfile`
-    an=`$JQ_CMD -r ".cloudcoin[].an[$input]" $coinfile`
-    array_nn=( $nn )
-    array_sn=( $sn )
-    array_an=( $an )
+    nn=$($JQ_CMD -r '.cloudcoin[].nn' $coinfile)
+    sn=$($JQ_CMD -r '.cloudcoin[].sn' $coinfile)
+    an=$($JQ_CMD -r ".cloudcoin[].an[$input]" $coinfile)
+    array_nn=($nn)
+    array_sn=($sn)
+    array_an=($an)
 
-    for s in "${array_sn[@]}"
-    do
-        array_denom+=( "$(Get_denom $s)" )
+    for s in "${array_sn[@]}"; do
+        array_denom+=("$(Get_denom $s)")
     done
 
     ## for debugging only
@@ -1537,16 +1523,15 @@ _multi_detect(){
     # Test the Echo
     test_echo=$(_echo $input)
     run_echo=$?
-    if [ $run_echo -eq 1 ];then
+    if [ $run_echo -eq 1 ]; then
         Error "$ERROR_05"
         mult_detect_response="$ERROR_05"
         return 1
-    fi 
+    fi
 
     index=0
-    for n in "${array_nn[@]}"
-    do
-        if [ $index -eq 0 ];then
+    for n in "${array_nn[@]}"; do
+        if [ $index -eq 0 ]; then
             post_nns="nns[]=$n"
         else
             post_nns="$post_nns&nns[]=$n"
@@ -1555,20 +1540,18 @@ _multi_detect(){
     done
 
     index=0
-    for s in "${array_sn[@]}"
-    do
-        if [ $index -eq 0 ];then
+    for s in "${array_sn[@]}"; do
+        if [ $index -eq 0 ]; then
             post_sns="sns[]=$s"
         else
             post_sns="$post_sns&sns[]=$s"
         fi
         ((index++))
     done
-    
+
     index=0
-    for a in "${array_an[@]}"
-    do
-        if [ $index -eq 0 ];then
+    for a in "${array_an[@]}"; do
+        if [ $index -eq 0 ]; then
             post_ans="ans[]=$a"
             post_pans="pans[]=$a"
         else
@@ -1579,9 +1562,8 @@ _multi_detect(){
     done
 
     index=0
-    for d in "${array_denom[@]}"
-    do
-        if [ $index -eq 0 ];then
+    for d in "${array_denom[@]}"; do
+        if [ $index -eq 0 ]; then
             post_denoms="denomination[]=$d"
         else
             post_denoms="$post_denoms&denomination[]=$d"
@@ -1598,13 +1580,13 @@ _multi_detect(){
     #echo "post_pans = $post_pans"
     #echo "post_denoms = $post_denoms"
     #echo "post_data = $post_data"
-    
+
     detect_retval=0
     start_s=$(Timer)
     http_response=$($CURL_CMD $CURL_OPT_multi -d "$post_data" $raida_url 2>&1)
     http_retval=$?
     end_s=$(Timer)
-    elapsed=$(( (end_s-start_s)/1000000 ))
+    elapsed=$(((end_s - start_s) / 1000000))
 
     if [ $DEBUG -eq 1 ]; then
         Log "[_multi_detect] " "POST_URL: $raida_url "
@@ -1613,15 +1595,15 @@ _multi_detect(){
         Log "[_multi_detect] " "End of POST"
     fi
 
-    if [ $http_retval -eq 0 ];then
+    if [ $http_retval -eq 0 ]; then
         status=$(echo $http_response | $JQ_CMD -r '.[0].status')
 
-        if [ "$status" == "pass" ];then
+        if [ "$status" == "pass" ]; then
             response_color="$_GREEN_$http_response$_REST_"
         else
             response_color="$_RED_$http_response$_REST_"
             detect_retval=1
-            
+
         fi
     else
         response_color="$_RED_$http_response$_REST_"
@@ -1639,59 +1621,55 @@ _multi_detect(){
     return $detect_retval
 }
 
-_multi_detect2(){
+_multi_detect2() {
     unset array_nn
     unset array_sn
     unset array_an
     unset array_denom
     local node raida raida_url input
-    local s n i j 
+    local s n i j
     local post_sns post_nns post_ans post_pans post_denoms
     # Check the testcoin file
     Coin_validation $TESTCOINFILE3
     is_testcoin=$?
-    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+    [ $is_testcoin -eq 1 ] && return 1 # testcoin file not found or with wrong format
 
     node="$1"
-    nn=`$JQ_CMD -r '.cloudcoin[].nn' $TESTCOINFILE3`
-    sn=`$JQ_CMD -r '.cloudcoin[].sn' $TESTCOINFILE3`
-    an=`$JQ_CMD -r ".cloudcoin[].an[$node]" $TESTCOINFILE3`
-    array_nn=( $nn )
-    array_sn=( $sn )
-    array_an=( $an )
+    nn=$($JQ_CMD -r '.cloudcoin[].nn' $TESTCOINFILE3)
+    sn=$($JQ_CMD -r '.cloudcoin[].sn' $TESTCOINFILE3)
+    an=$($JQ_CMD -r ".cloudcoin[].an[$node]" $TESTCOINFILE3)
+    array_nn=($nn)
+    array_sn=($sn)
+    array_an=($an)
 
-    for s in "${array_sn[@]}"
-    do
-        array_denom+=( "$(Get_denom $s)" )
+    for s in "${array_sn[@]}"; do
+        array_denom+=("$(Get_denom $s)")
     done
 
     notes_total=${#array_sn[@]}
 
-    while true
-    do
+    while true; do
         echo -n "How many of the notes to post once (< $MAX_POST_NOTES or ENTER)? " && read input
-        if [ -z $input ];then
+        if [ -z $input ]; then
             notes_post=$MAX_POST_NOTES
         else
             notes_post=$input
         fi
 
-        if [ $notes_post -gt 0 -a $notes_post -le $MAX_POST_NOTES ];then
-            detect_round=$(( ($notes_total / $notes_post) + ($notes_total % $notes_post > 0) ))
+        if [ $notes_post -gt 0 -a $notes_post -le $MAX_POST_NOTES ]; then
+            detect_round=$((($notes_total / $notes_post) + ($notes_total % $notes_post > 0)))
             n=0
             j=0
-            while [ $n -lt $notes_total ]
-            do
-                if [ $((($notes_total - $n + 1))) -gt $notes_post ];then
-                    for ((i=0;i<$notes_post;i++))
-                    do
-                        if [ $i -eq 0 ];then
+            while [ $n -lt $notes_total ]; do
+                if [ $((($notes_total - $n + 1))) -gt $notes_post ]; then
+                    for ((i = 0; i < $notes_post; i++)); do
+                        if [ $i -eq 0 ]; then
                             post_sns="sns[]=${array_sn[$n]}"
                             post_nns="nns[]=${array_nn[$n]}"
                             post_ans="ans[]=${array_an[$n]}"
                             post_pans="pans[]=${array_an[$n]}"
                             post_denoms="denomination[]=${array_denom[$n]}"
-                            
+
                         else
                             post_sns="$post_sns&sns[]=${array_sn[$n]}"
                             post_nns="$post_nns&nns[]=${array_nn[$n]}"
@@ -1710,9 +1688,8 @@ _multi_detect2(){
                     _post_multi_detect "$node" "$post_data" $notes_post
                 else
                     last_round=$((($notes_total - $n)))
-                    for ((i=0;i<$last_round;i++))
-                    do
-                        if [ $i -eq 0 ];then
+                    for ((i = 0; i < $last_round; i++)); do
+                        if [ $i -eq 0 ]; then
                             post_sns="sns[]=${array_sn[$n]}"
                             post_nns="nns[]=${array_nn[$n]}"
                             post_ans="ans[]=${array_an[$n]}"
@@ -1733,7 +1710,7 @@ _multi_detect2(){
                     #echo "last-> $post_pans"
                     #echo "last-> $post_denoms"
                     post_data="$post_nns&$post_sns&$post_ans&$post_pans&$post_denoms"
-                    _post_multi_detect "$node" "$post_data" $last_round 
+                    _post_multi_detect "$node" "$post_data" $last_round
                 fi
             done
             break
@@ -1743,7 +1720,7 @@ _multi_detect2(){
 
 }
 
-_post_multi_detect(){
+_post_multi_detect() {
     unset array_status
     local node post_data status s pass_count fail_count
     local raida raida_url start_s end_s elapsed total_count
@@ -1758,7 +1735,7 @@ _post_multi_detect(){
     http_response=$($CURL_CMD $CURL_OPT_multi -d "$post_data" $raida_url 2>&1)
     http_retval=$?
     end_s=$(Timer)
-    elapsed=$(( (end_s-start_s)/1000000 ))
+    elapsed=$(((end_s - start_s) / 1000000))
     ## for debugging only
     #echo $http_response
 
@@ -1769,29 +1746,28 @@ _post_multi_detect(){
         Log "[_post_multi_detect] " "End of POST"
     fi
 
-    if [ $http_retval -eq 0 ];then
+    if [ $http_retval -eq 0 ]; then
         status=$(echo $http_response | $JQ_CMD -r '.[].status' 2>&1)
         status_retval=$?
 
-        if [ $status_retval -eq 0 ];then
-            array_status=( $status )
+        if [ $status_retval -eq 0 ]; then
+            array_status=($status)
             #echo "status -> ${array_status[@]}"
-            
+
             pass_count=0
             fail_count=0
             total_count=${#array_status[@]}
-            if [ $total_count -eq $post_nums ];then
-                for s in "${array_status[@]}"
-                do
+            if [ $total_count -eq $post_nums ]; then
+                for s in "${array_status[@]}"; do
                     [ "$s" == "pass" ] && ((pass_count++))
                     [ "$s" == "fail" ] && ((fail_count++))
                 done
-                
-                if [ $elapsed -gt $WARN_MS ];then
+
+                if [ $elapsed -gt $WARN_MS ]; then
                     printf " -> Posted: %3d | Detected: %3d | Pass: %3d , Fail: %3d (${_RED_}%4i${_REST_}ms)\n" $post_nums $total_count $pass_count $fail_count $elapsed
                 else
                     printf " -> Posted: %3d | Detected: %3d | Pass: %3d , Fail: %3d (%4ims)\n" $post_nums $total_count $pass_count $fail_count $elapsed
-                fi    
+                fi
                 return 0
 
             else
@@ -1804,52 +1780,50 @@ _post_multi_detect(){
         detect_retval=1
     fi
 
-    if [ $detect_retval -eq 1 ];then
+    if [ $detect_retval -eq 1 ]; then
         printf " -> Posted: %3d | Detected: ${_RED_}%3d${_REST_} | Pass: ${_RED_}%3d${_REST_} , Fail: ${_RED_}%3d${_REST_}\n" $post_nums 0 0 0
     fi
 
 }
 
-
-_all_multi_get_ticket(){
-    local n run    
+_all_multi_get_ticket() {
+    local n run
 
     # Check the testcoin file
     Coin_validation $TESTCOINFILE2
     is_testcoin=$?
-    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+    [ $is_testcoin -eq 1 ] && return 1 # testcoin file not found or with wrong format
 
     echo "MULTI_TICKET Results: "
-    for ((n=0;n<$RAIDA_NUMS;n++))
-    do
+    for ((n = 0; n < $RAIDA_NUMS; n++)); do
         _multi_get_ticket $n >/dev/null 2>&1
         run=$?
-        if [ $run -eq 0 ];then
+        if [ $run -eq 0 ]; then
             result="PASS"
         else
             result="${_RED_}FAIL${_REST_}"
-        fi 
+        fi
 
         Output $n "$result" $multi_tickets_elapsed
 
-        if [ "$result" != "PASS" ];then
+        if [ "$result" != "PASS" ]; then
             Output2 "$multi_tickets_response"
         fi
 
     done
-    echo;echo
+    echo
+    echo
 
 }
 
-
-_multi_get_ticket(){
+_multi_get_ticket() {
     unset array_nn
     unset array_sn
     unset array_an
     unset array_denom
     local input raida raida_url
-    local k n s a d 
-    local post_nns post_sns post_ans post_pans post_denoms post_data 
+    local k n s a d
+    local post_nns post_sns post_ans post_pans post_denoms post_data
     local node_num coinfile
     multi_tickets_response=""
 
@@ -1862,20 +1836,19 @@ _multi_get_ticket(){
     # Check the testcoin file
     Coin_validation $coinfile
     is_testcoin=$?
-    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+    [ $is_testcoin -eq 1 ] && return 1 # testcoin file not found or with wrong format
 
     raida="raida$node_num"
     raida_url="https://$raida.cloudcoin.global/service/multi_get_ticket"
-    nn=`$JQ_CMD -r '.cloudcoin[].nn' $coinfile`
-    sn=`$JQ_CMD -r '.cloudcoin[].sn' $coinfile`
-    an=`$JQ_CMD -r ".cloudcoin[].an[$node_num]" $coinfile`
-    array_nn=( $nn )
-    array_sn=( $sn )
-    array_an=( $an )
+    nn=$($JQ_CMD -r '.cloudcoin[].nn' $coinfile)
+    sn=$($JQ_CMD -r '.cloudcoin[].sn' $coinfile)
+    an=$($JQ_CMD -r ".cloudcoin[].an[$node_num]" $coinfile)
+    array_nn=($nn)
+    array_sn=($sn)
+    array_an=($an)
 
-    for k in "${array_sn[@]}"
-    do
-        array_denom+=( "$(Get_denom $k)" )
+    for k in "${array_sn[@]}"; do
+        array_denom+=("$(Get_denom $k)")
     done
 
     ## for debugging only
@@ -1887,16 +1860,15 @@ _multi_get_ticket(){
     # Test the Echo
     test_echo=$(_echo $node_num)
     run_echo=$?
-    if [ $run_echo -eq 1 ];then
+    if [ $run_echo -eq 1 ]; then
         Error "$ERROR_05"
         multi_tickets_response="$ERROR_05"
         return 1
-    fi 
+    fi
 
     index=0
-    for n in "${array_nn[@]}"
-    do
-        if [ $index -eq 0 ];then
+    for n in "${array_nn[@]}"; do
+        if [ $index -eq 0 ]; then
             post_nns="nns[]=$n"
         else
             post_nns="$post_nns&nns[]=$n"
@@ -1905,20 +1877,18 @@ _multi_get_ticket(){
     done
 
     index=0
-    for s in "${array_sn[@]}"
-    do
-        if [ $index -eq 0 ];then
+    for s in "${array_sn[@]}"; do
+        if [ $index -eq 0 ]; then
             post_sns="sns[]=$s"
         else
             post_sns="$post_sns&sns[]=$s"
         fi
         ((index++))
     done
-    
+
     index=0
-    for a in "${array_an[@]}"
-    do
-        if [ $index -eq 0 ];then
+    for a in "${array_an[@]}"; do
+        if [ $index -eq 0 ]; then
             post_ans="ans[]=$a"
             post_pans="pans[]=$a"
         else
@@ -1929,9 +1899,8 @@ _multi_get_ticket(){
     done
 
     index=0
-    for d in "${array_denom[@]}"
-    do
-        if [ $index -eq 0 ];then
+    for d in "${array_denom[@]}"; do
+        if [ $index -eq 0 ]; then
             post_denoms="denomination[]=$d"
         else
             post_denoms="$post_denoms&denomination[]=$d"
@@ -1954,7 +1923,7 @@ _multi_get_ticket(){
     http_response=$($CURL_CMD $CURL_OPT_multi -d "$post_data" $raida_url 2>&1)
     http_retval=$?
     end_s=$(Timer)
-    elapsed=$(( (end_s-start_s)/1000000 ))
+    elapsed=$(((end_s - start_s) / 1000000))
 
     if [ $DEBUG -eq 1 ]; then
         Log "[_multi_get_ticket] " "POST_URL: $raida_url "
@@ -1963,15 +1932,15 @@ _multi_get_ticket(){
         Log "[_multi_get_ticket] " "End of POST"
     fi
 
-    if [ $http_retval -eq 0 ];then
+    if [ $http_retval -eq 0 ]; then
         status=$(echo $http_response | $JQ_CMD -r '.[0].status')
 
-        if [ "$status" == "ticket" ];then
+        if [ "$status" == "ticket" ]; then
             response_color="$_GREEN_$http_response$_REST_"
         else
             response_color="$_RED_$http_response$_REST_"
             multi_ticket_retval=1
-            
+
         fi
     else
         response_color="$_RED_$http_response$_REST_"
@@ -1990,8 +1959,7 @@ _multi_get_ticket(){
 
 }
 
-
-_multi_hints(){
+_multi_hints() {
     unset array_rn
     local input
     local raida
@@ -2002,37 +1970,36 @@ _multi_hints(){
     # Check the testcoin file
     Coin_validation $TESTCOINFILE2
     is_testcoin=$?
-    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+    [ $is_testcoin -eq 1 ] && return 1 # testcoin file not found or with wrong format
 
     input="$1"
     raida="raida$input"
     raida_url="https://$raida.cloudcoin.global/service/multi_hints"
 
     # _multi_get_ticket will return $multi_tickets_response
-    # 
+    #
     _multi_get_ticket $input >/dev/null 2>&1
     run_multi_get_ticket=$?
-    if [ $run_multi_get_ticket -eq 1 ];then
+    if [ $run_multi_get_ticket -eq 1 ]; then
         Error "$ERROR_07"
         status="Get Ticket Failed"
         return 1
-    fi 
-    
+    fi
+
     rns=$(echo $multi_tickets_response | $JQ_CMD -r '.[].message')
-    array_rn=( $rns )
+    array_rn=($rns)
     #echo "rn = ${array_rn[@]}"
 
     index=0
-    for i in "${array_rn[@]}"
-    do
-        if [ $index -eq 0 ];then
+    for i in "${array_rn[@]}"; do
+        if [ $index -eq 0 ]; then
             post_rns="rns[]=$i"
         else
             post_rns="$post_rns&rns[]=$i"
         fi
         ((index++))
     done
-    
+
     post_data="$post_rns"
     #echo $post_rns
 
@@ -2041,7 +2008,7 @@ _multi_hints(){
     http_response=$($CURL_CMD $CURL_OPT_multi -d "$post_data" $raida_url 2>&1)
     http_retval=$?
     end_s=$(Timer)
-    elapsed=$(( (end_s-start_s)/1000000 ))
+    elapsed=$(((end_s - start_s) / 1000000))
 
     if [ $DEBUG -eq 1 ]; then
         Log "[_multi_hints] " "POST_URL: $raida_url "
@@ -2050,13 +2017,12 @@ _multi_hints(){
         Log "[_multi_hints] " "End of POST"
     fi
 
-    if [ $http_retval -eq 0 ];then
+    if [ $http_retval -eq 0 ]; then
         http_hints=$(echo $http_response | $JQ_CMD -r .[])
-        array_hints=( $http_hints)
+        array_hints=($http_hints)
 
         response_color="$_GREEN_$http_response$_REST_"
-        for h in "${array_hints[@]}"
-        do
+        for h in "${array_hints[@]}"; do
             _ms=$(echo $h | cut -d: -f2)
             if [ $_ms -ge $MAX_LATENCY -o $_ms -lt 0 ]; then
                 response_color="$_RED_$http_response$_REST_"
@@ -2077,10 +2043,9 @@ _multi_hints(){
 
 }
 
-
-_multi_fix(){
+_multi_fix() {
     local a i n j d input notes
-    local post_pans post_messages post_nns post_fromservers post_data 
+    local post_pans post_messages post_nns post_fromservers post_data
     local node_num coinfile
 
     unset array_fix_corner1
@@ -2097,57 +2062,54 @@ _multi_fix(){
     # Check the testcoin file
     Coin_validation $coinfile
     is_testcoin=$?
-    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+    [ $is_testcoin -eq 1 ] && return 1 # testcoin file not found or with wrong format
 
     fixed_server=$node_num
-    nn=`$JQ_CMD -r '.cloudcoin[].nn' $coinfile`
-    sn=`$JQ_CMD -r '.cloudcoin[].sn' $coinfile`
-    an=`$JQ_CMD -r ".cloudcoin[].an[$fixed_server]" $coinfile`
-    array_nn=( $nn )
-    array_sn=( $sn )
-    array_an=( $an )
+    nn=$($JQ_CMD -r '.cloudcoin[].nn' $coinfile)
+    sn=$($JQ_CMD -r '.cloudcoin[].sn' $coinfile)
+    an=$($JQ_CMD -r ".cloudcoin[].an[$fixed_server]" $coinfile)
+    array_nn=($nn)
+    array_sn=($sn)
+    array_an=($an)
 
-    array_fix_corner1[1]=$(( fixed_server - 6))
-    array_fix_corner1[2]=$(( fixed_server - 5))
-    array_fix_corner1[3]=$(( fixed_server - 1))
-    array_fix_corner2[1]=$(( fixed_server - 5))
-    array_fix_corner2[2]=$(( fixed_server - 4))
-    array_fix_corner2[3]=$(( fixed_server + 1))
-    array_fix_corner3[1]=$(( fixed_server + 5))
-    array_fix_corner3[2]=$(( fixed_server + 4))
-    array_fix_corner3[3]=$(( fixed_server - 1))
-    array_fix_corner4[1]=$(( fixed_server + 6))
-    array_fix_corner4[2]=$(( fixed_server + 5))
-    array_fix_corner4[3]=$(( fixed_server + 1))
+    array_fix_corner1[1]=$((fixed_server - 6))
+    array_fix_corner1[2]=$((fixed_server - 5))
+    array_fix_corner1[3]=$((fixed_server - 1))
+    array_fix_corner2[1]=$((fixed_server - 5))
+    array_fix_corner2[2]=$((fixed_server - 4))
+    array_fix_corner2[3]=$((fixed_server + 1))
+    array_fix_corner3[1]=$((fixed_server + 5))
+    array_fix_corner3[2]=$((fixed_server + 4))
+    array_fix_corner3[3]=$((fixed_server - 1))
+    array_fix_corner4[1]=$((fixed_server + 6))
+    array_fix_corner4[2]=$((fixed_server + 5))
+    array_fix_corner4[3]=$((fixed_server + 1))
 
-    if [ "$isFix4Mode" = "true" ];then
-        array_fix_corner1[4]=$(( fixed_server + 6))
-        array_fix_corner2[4]=$(( fixed_server + 4))
-        array_fix_corner3[4]=$(( fixed_server - 4))
-        array_fix_corner4[4]=$(( fixed_server - 6))
-    fi    
+    if [ "$isFix4Mode" = "true" ]; then
+        array_fix_corner1[4]=$((fixed_server + 6))
+        array_fix_corner2[4]=$((fixed_server + 4))
+        array_fix_corner3[4]=$((fixed_server - 4))
+        array_fix_corner4[4]=$((fixed_server - 6))
+    fi
 
-    for ((i=1;i<=4;i++))
-    do
+    for ((i = 1; i <= 4; i++)); do
         array_name="array_fix_corner$i"
         n=1
-        for j in $(eval echo \${$array_name[@]})
-        do
-            if [ $j -lt 0 ];then
-                eval $array_name[$n]=$(( $j + 25))
-            elif [ $j -gt 24 ];then
-                eval $array_name[$n]=$(( $j - 25))
+        for j in $(eval echo \${$array_name[@]}); do
+            if [ $j -lt 0 ]; then
+                eval $array_name[$n]=$(($j + 25))
+            elif [ $j -gt 24 ]; then
+                eval $array_name[$n]=$(($j - 25))
             fi
             ((n++))
         done
     done
 
     input=""
-    while true
-    do
+    while true; do
         echo "What RAIDA corners do you want to use? 1.Upper-Left, 2.Upper-Right, 3.Lower-Left, 4.Lower-Right"
         echo -n "Corner> " && read input
-        if [ $input -gt 0 -a $input -lt 5  ];then
+        if [ $input -gt 0 -a $input -lt 5 ]; then
             array_name="array_fix_corner$input"
             array_trusted_servers=$(eval echo \${$array_name[@]})
             n=1
@@ -2159,9 +2121,8 @@ _multi_fix(){
             #echo "array_trusted_servers = ${array_trusted_servers[@]}"
 
             index=0
-            for a in "${array_an[@]}"
-            do
-                if [ $index -eq 0 ];then
+            for a in "${array_an[@]}"; do
+                if [ $index -eq 0 ]; then
                     post_pans="pans[]=$a"
                 else
                     post_pans="$post_pans&pans[]=$a"
@@ -2169,24 +2130,22 @@ _multi_fix(){
                 ((index++))
             done
 
-            for i in ${array_trusted_servers[@]}
-            do
+            for i in ${array_trusted_servers[@]}; do
                 _multi_get_ticket "$i" "$coinfile"
                 run_multi_get_ticket=$?
-                if [ $run_multi_get_ticket -eq 1 ];then
+                if [ $run_multi_get_ticket -eq 1 ]; then
                     Error "$ERROR_07"
                     status="Get Ticket Failed"
                     return 1
-                fi 
+                fi
 
                 tickets=$(echo $multi_tickets_response | $JQ_CMD -r '.[].message')
-                array_tickets=( $tickets )
+                array_tickets=($tickets)
                 #echo "array_tickets = ${array_tickets[@]}"
 
                 notes=0
-                for d in "${array_tickets[@]}"
-                do
-                    if [ $n -eq 1 -a $notes -eq 0 ];then
+                for d in "${array_tickets[@]}"; do
+                    if [ $n -eq 1 -a $notes -eq 0 ]; then
                         post_messages="message${n}[]=${d}"
                     else
                         post_messages="${post_messages}&message${n}[]=${d}"
@@ -2195,7 +2154,7 @@ _multi_fix(){
                     ((notes++))
                 done
 
-                if [ $n -eq 1 ];then
+                if [ $n -eq 1 ]; then
                     post_fromservers="fromserver$n=$i"
                 else
                     post_fromservers="$post_fromservers&fromserver$n=$i"
@@ -2219,7 +2178,7 @@ _multi_fix(){
             http_response=$($CURL_CMD $CURL_OPT_multi -d "$post_data" $raida_url 2>&1)
             http_retval=$?
             end_s=$(Timer)
-            elapsed=$(( (end_s-start_s)/1000000 ))
+            elapsed=$(((end_s - start_s) / 1000000))
 
             if [ $DEBUG -eq 1 ]; then
                 Log "[_multi_fix] " "POST_URL: $raida_url "
@@ -2227,29 +2186,28 @@ _multi_fix(){
                 Log "[_multi_fix] " "POST_RESPONSE: $http_response"
                 Log "[_multi_fix] " "End of POST"
             fi
-            
-            if [ $http_retval -eq 0 ];then
+
+            if [ $http_retval -eq 0 ]; then
                 status=$(echo $http_response | $JQ_CMD -r '.[0].status')
-        
-                if [ "$status" == "pass" ];then
+
+                if [ "$status" == "pass" ]; then
                     response_color="$_GREEN_$http_response$_REST_"
                 else
                     response_color="$_RED_$http_response$_REST_"
                     multi_fix_retval=1
-                    
+
                 fi
             else
                 response_color="$_RED_$http_response$_REST_"
                 multi_fix_retval=1
             fi
-            
+
             echo
             echo "Milliseconds: $elapsed"
             echo "Request: $raida_url"
             echo "Post Data: $post_data"
             echo -e "Response: $response_color"
             echo
-
 
             break
         else
@@ -2260,7 +2218,7 @@ _multi_fix(){
 
 }
 
-Hints_ticket_request(){
+Hints_ticket_request() {
     local input
     local raida
     local raida_url
@@ -2268,21 +2226,21 @@ Hints_ticket_request(){
     input="$1"
     raida="raida$input"
     raida_url="https://$raida.cloudcoin.global/service/get_ticket"
-    nn=`$JQ_CMD '.cloudcoin[].nn' $TESTCOINFILE1 | tr -d '"'`
-    sn=`$JQ_CMD '.cloudcoin[].sn' $TESTCOINFILE1 | tr -d '"'`
-    string_an=`$JQ_CMD -r '.cloudcoin[].an[]' $TESTCOINFILE1`
-    array_an=( $string_an )
+    nn=$($JQ_CMD '.cloudcoin[].nn' $TESTCOINFILE1 | tr -d '"')
+    sn=$($JQ_CMD '.cloudcoin[].sn' $TESTCOINFILE1 | tr -d '"')
+    string_an=$($JQ_CMD -r '.cloudcoin[].an[]' $TESTCOINFILE1)
+    array_an=($string_an)
     an="${array_an[$input]}"
     denom=$(Get_denom $sn)
     raida_url="$raida_url?nn=$nn&sn=$sn&an=$an&pan=$an&denomination=$denom"
     http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
     is_raida=$(echo $http_response | grep -c "server")
 
-    if [ "$is_raida" == "1" ];then
+    if [ "$is_raida" == "1" ]; then
         message="$(echo $http_response | $JQ_CMD -r '.message')"
         status="$(echo $http_response | $JQ_CMD -r '.status')"
 
-        if [ $status != "ticket" ];then
+        if [ $status != "ticket" ]; then
             ticket=""
             echo "Last ticket is: empty"
             echo
@@ -2308,8 +2266,7 @@ Hints_ticket_request(){
     fi
 }
 
-
-Fix_ticket_request(){
+Fix_ticket_request() {
     local raida raida_url
     local nn sn toserver an denom
 
@@ -2326,11 +2283,11 @@ Fix_ticket_request(){
     is_raida=$(echo $http_response | grep -c "server")
     ticket=""
 
-    if [ "$is_raida" == "1" ];then
+    if [ "$is_raida" == "1" ]; then
         message="$(echo $http_response | $JQ_CMD -r '.message')"
         status="$(echo $http_response | $JQ_CMD -r '.status')"
 
-        if [ $status != "ticket" ];then
+        if [ $status != "ticket" ]; then
             echo
             echo $raida_url
             echo
@@ -2356,7 +2313,7 @@ Fix_ticket_request(){
 
 }
 
-_SW_Show(){
+_SW_Show() {
     local node_num coinfile
     node_num=$1
     coinfile="$2"
@@ -2364,14 +2321,14 @@ _SW_Show(){
     # Check the local testcoin file
     Coin_validation $coinfile
     is_testcoin=$?
-    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+    [ $is_testcoin -eq 1 ] && return 1 # testcoin file not found or with wrong format
 
     raida="raida$node_num"
     raida_url="https://$raida.cloudcoin.global/service/show"
-    nn=`$JQ_CMD '.cloudcoin[].nn' $coinfile | tr -d '"'`
-    sn=`$JQ_CMD '.cloudcoin[].sn' $coinfile | tr -d '"'`
-    string_an=`$JQ_CMD -r '.cloudcoin[].an[]' $coinfile`
-    array_an=( $string_an )
+    nn=$($JQ_CMD '.cloudcoin[].nn' $coinfile | tr -d '"')
+    sn=$($JQ_CMD '.cloudcoin[].sn' $coinfile | tr -d '"')
+    string_an=$($JQ_CMD -r '.cloudcoin[].an[]' $coinfile)
+    array_an=($string_an)
     an="${array_an[$node_num]}"
     denom=$(Get_denom $sn)
     # for debug only
@@ -2383,8 +2340,8 @@ _SW_Show(){
     # Test the Echo
     test_echo=$(_echo $node_num)
     run_echo=$?
-    if [ $run_echo -eq 1 ];then
-        Error "$ERROR_05"    # Echo Failed
+    if [ $run_echo -eq 1 ]; then
+        Error "$ERROR_05" # Echo Failed
         return 1
     else
         raida_url="$raida_url?sn=$sn&an=$an&pan=$an&denomination=$denom"
@@ -2392,13 +2349,13 @@ _SW_Show(){
         http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
         http_retval=$?
         end_s=$(Timer)
-        elapsed=$(( (end_s-start_s)/1000000 ))
+        elapsed=$(((end_s - start_s) / 1000000))
 
         if [ $http_retval -eq 0 ]; then
             status=$(echo $http_response | $JQ_CMD -r '.status')
-            if [ "$status" == "pass" ];then
+            if [ "$status" == "pass" ]; then
                 http_sn=$(echo $http_response | $JQ_CMD -r '.message[].sn')
-                http_array_sn=( $http_sn )
+                http_array_sn=($http_sn)
                 if [ -z "$http_sn" ]; then
                     status_color="$_GREEN_ No coins in transfer pool!$_REST_"
                 else
@@ -2415,7 +2372,7 @@ _SW_Show(){
             status_color="$_RED_$status$_REST_"
             response_color="$_RED_$http_response$_REST_"
         fi
-        
+
         echo
         echo "[Show_ID]"
         echo "SN ID: $sn"
@@ -2424,11 +2381,11 @@ _SW_Show(){
         echo "Request: $raida_url"
         echo -e "Response: $response_color"
         echo
-    
-    fi 
+
+    fi
 }
 
-_SW_Send(){
+_SW_Send() {
     local node_num id_coinfile bank_coinfile
     local f s1 s2 a d
     local array_denom
@@ -2437,25 +2394,23 @@ _SW_Send(){
     bank_coinfile="$3"
 
     # Check the local testcoin file
-    for f in $id_coinfile $bank_coinfile
-    do
+    for f in $id_coinfile $bank_coinfile; do
         Coin_validation $f
         is_testcoin=$?
-        [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+        [ $is_testcoin -eq 1 ] && return 1 # testcoin file not found or with wrong format
     done
 
     raida="raida$node_num"
     raida_url="https://$raida.cloudcoin.global/service/send"
-    nn=`$JQ_CMD -r '.cloudcoin[].nn' $bank_coinfile`
-    sn=`$JQ_CMD -r '.cloudcoin[].sn' $bank_coinfile`
-    an=`$JQ_CMD -r ".cloudcoin[].an[$node_num]" $bank_coinfile`
-    array_nn=( $nn )
-    array_sn=( $sn )
-    array_an=( $an )
+    nn=$($JQ_CMD -r '.cloudcoin[].nn' $bank_coinfile)
+    sn=$($JQ_CMD -r '.cloudcoin[].sn' $bank_coinfile)
+    an=$($JQ_CMD -r ".cloudcoin[].an[$node_num]" $bank_coinfile)
+    array_nn=($nn)
+    array_sn=($sn)
+    array_an=($an)
 
-    for s1 in "${array_sn[@]}"
-    do
-        array_denom+=( "$(Get_denom $s1)" )
+    for s1 in "${array_sn[@]}"; do
+        array_denom+=("$(Get_denom $s1)")
     done
 
     ## for debugging only
@@ -2467,15 +2422,14 @@ _SW_Send(){
     # Test the Echo
     test_echo=$(_echo $node_num)
     run_echo=$?
-    if [ $run_echo -eq 1 ];then
-        Error "$ERROR_05"    # Echo Failed
+    if [ $run_echo -eq 1 ]; then
+        Error "$ERROR_05" # Echo Failed
         return 1
     else
         index=0
         post_sns=""
-        for s2 in "${array_sn[@]}"
-        do
-            if [ $index -eq 0 ];then
+        for s2 in "${array_sn[@]}"; do
+            if [ $index -eq 0 ]; then
                 post_sns="sns[]=$s2"
             else
                 post_sns="$post_sns&sns[]=$s2"
@@ -2485,9 +2439,8 @@ _SW_Send(){
 
         index=0
         post_ans=""
-        for a in "${array_an[@]}"
-        do
-            if [ $index -eq 0 ];then
+        for a in "${array_an[@]}"; do
+            if [ $index -eq 0 ]; then
                 post_ans="ans[]=$a"
                 post_pans="pans[]=$a"
             else
@@ -2499,9 +2452,8 @@ _SW_Send(){
 
         index=0
         post_denoms=""
-        for d in "${array_denom[@]}"
-        do
-            if [ $index -eq 0 ];then
+        for d in "${array_denom[@]}"; do
+            if [ $index -eq 0 ]; then
                 post_denoms="denomination[]=$d"
             else
                 post_denoms="$post_denoms&denomination[]=$d"
@@ -2509,7 +2461,7 @@ _SW_Send(){
             ((index++))
         done
 
-        to_sn=`$JQ_CMD -r '.cloudcoin[].sn' $id_coinfile`
+        to_sn=$($JQ_CMD -r '.cloudcoin[].sn' $id_coinfile)
         post_to_sn="to_sn=$to_sn"
         post_tag="tag=SendTo$to_sn"
         post_data="$post_sns&$post_ans&$post_pans&$post_denoms&$post_to_sn&$post_tag"
@@ -2526,7 +2478,7 @@ _SW_Send(){
         http_response=$($CURL_CMD $CURL_OPT_multi -d "$post_data" $raida_url 2>&1)
         http_retval=$?
         end_s=$(Timer)
-        elapsed=$(( (end_s-start_s)/1000000 ))
+        elapsed=$(((end_s - start_s) / 1000000))
 
         if [ $DEBUG -eq 1 ]; then
             Log "[_SW_Send] " "POST_URL: $raida_url "
@@ -2538,14 +2490,13 @@ _SW_Send(){
         if [ $http_retval -eq 0 ]; then
             http_sn=$(echo $http_response | $JQ_CMD -r '.[].sn')
             http_status=$(echo $http_response | $JQ_CMD -r '.[].status')
-            http_array_sn=( $http_sn )
-            http_array_status=( $http_status )
+            http_array_sn=($http_sn)
+            http_array_status=($http_status)
 
             status_color=""
             notpass=0
-            for ((i=0;i<${#http_array_sn[@]};i++))
-            do
-                if [ "${http_array_status[$i]}" == "pass" ];then
+            for ((i = 0; i < ${#http_array_sn[@]}; i++)); do
+                if [ "${http_array_status[$i]}" == "pass" ]; then
                     status_color+="$_GREEN_${http_array_sn[$i]}->${http_array_status[$i]}$_REST_ "
                 else
                     notpass=1
@@ -2553,7 +2504,7 @@ _SW_Send(){
                 fi
             done
 
-            if [ $notpass -eq 1 ];then
+            if [ $notpass -eq 1 ]; then
                 response_color="$_RED_$http_response$_REST_"
             else
                 response_color="$_GREEN_$http_response$_REST_"
@@ -2577,7 +2528,7 @@ _SW_Send(){
 
 }
 
-_SW_Receive(){
+_SW_Receive() {
     local node_num id_coinfile bank_coinfile
     local s i
     node_num=$1
@@ -2585,11 +2536,10 @@ _SW_Receive(){
     bank_coinfile="$3"
 
     # Check the local testcoin file
-    for f in $id_coinfile $bank_coinfile
-    do
+    for f in $id_coinfile $bank_coinfile; do
         Coin_validation $f
         is_testcoin=$?
-        [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+        [ $is_testcoin -eq 1 ] && return 1 # testcoin file not found or with wrong format
     done
 
     [ -w $bank_coinfile ] || {
@@ -2599,10 +2549,10 @@ _SW_Receive(){
 
     raida="raida$node_num"
     raida_url="https://$raida.cloudcoin.global/service/receive"
-    nn=`$JQ_CMD '.cloudcoin[].nn' $id_coinfile | tr -d '"'`
-    sn=`$JQ_CMD '.cloudcoin[].sn' $id_coinfile | tr -d '"'`
-    string_an=`$JQ_CMD -r '.cloudcoin[].an[]' $id_coinfile`
-    array_an=( $string_an )
+    nn=$($JQ_CMD '.cloudcoin[].nn' $id_coinfile | tr -d '"')
+    sn=$($JQ_CMD '.cloudcoin[].sn' $id_coinfile | tr -d '"')
+    string_an=$($JQ_CMD -r '.cloudcoin[].an[]' $id_coinfile)
+    array_an=($string_an)
     an="${array_an[$node_num]}"
     denom=$(Get_denom $sn)
     # for debug only
@@ -2611,28 +2561,27 @@ _SW_Receive(){
     #echo "an-> $an"
     #echo "denom-> $denom"
 
-    bank_sn=`$JQ_CMD -r '.cloudcoin[].sn' $bank_coinfile`
-    bank_sns=( $bank_sn )
+    bank_sn=$($JQ_CMD -r '.cloudcoin[].sn' $bank_coinfile)
+    bank_sns=($bank_sn)
 
     # Test the Echo
     test_echo=$(_echo $node_num)
     run_echo=$?
-    if [ $run_echo -eq 1 ];then
-        Error "$ERROR_05"    # Echo Failed
+    if [ $run_echo -eq 1 ]; then
+        Error "$ERROR_05" # Echo Failed
         return 1
     else
         index=0
         post_sns=""
-        for s in "${bank_sns[@]}"
-        do
-            if [ $index -eq 0 ];then
+        for s in "${bank_sns[@]}"; do
+            if [ $index -eq 0 ]; then
                 post_sns="sns[]=$s"
             else
                 post_sns="$post_sns&sns[]=$s"
             fi
             ((index++))
         done
-        
+
         post_data="sn=$sn&an=$an&pan=$an&denomination=$denom&$post_sns"
         #echo $post_data
 
@@ -2640,7 +2589,7 @@ _SW_Receive(){
         http_response=$($CURL_CMD $CURL_OPT_multi -d "$post_data" $raida_url 2>&1)
         http_retval=$?
         end_s=$(Timer)
-        elapsed=$(( (end_s-start_s)/1000000 ))
+        elapsed=$(((end_s - start_s) / 1000000))
 
         if [ $DEBUG -eq 1 ]; then
             Log "[_SW_Receive] " "POST_URL: $raida_url "
@@ -2654,9 +2603,9 @@ _SW_Receive(){
             http_status=$(echo $http_response | $JQ_CMD -r '.[].status')
             http_msg=$(echo $http_response | $JQ_CMD -r '.[].message')
 
-            http_array_sn=( $http_sn )
-            http_array_status=( $http_status )
-            http_array_msg=( $http_msg )
+            http_array_sn=($http_sn)
+            http_array_status=($http_status)
+            http_array_msg=($http_msg)
             ## for debugging only
             #echo "http_array_sn = ${http_array_sn[@]}"
             #echo "http_array_status = ${http_array_status[@]}"
@@ -2664,11 +2613,10 @@ _SW_Receive(){
 
             status_color=""
             notpass=0
-            for ((i=0;i<${#http_array_sn[@]};i++))
-            do
-                if [ "${http_array_status[$i]}" == "pass" ];then
+            for ((i = 0; i < ${#http_array_sn[@]}; i++)); do
+                if [ "${http_array_status[$i]}" == "pass" ]; then
                     new_an=${http_array_msg[$i]}
-                    $JQ_CMD ".cloudcoin[$i].an[$node_num] = \"$new_an\"" $bank_coinfile > $bank_coinfile.tmp && mv $bank_coinfile.tmp $bank_coinfile
+                    $JQ_CMD ".cloudcoin[$i].an[$node_num] = \"$new_an\"" $bank_coinfile >$bank_coinfile.tmp && mv $bank_coinfile.tmp $bank_coinfile
                     status_color+="$_GREEN_${http_array_sn[$i]}->${http_array_status[$i]}$_REST_ "
                 else
                     notpass=1
@@ -2676,7 +2624,7 @@ _SW_Receive(){
                 fi
             done
 
-            if [ $notpass -eq 1 ];then
+            if [ $notpass -eq 1 ]; then
                 response_color="$_RED_$http_response$_REST_"
             else
                 response_color="$_GREEN_$http_response$_REST_"
@@ -2700,17 +2648,17 @@ _SW_Receive(){
     fi
 }
 
-_SW_GetTag(){
+_SW_GetTag() {
     local node_num coinfile tag
     node_num=$1
     coinfile="$2"
 
     raida="raida$node_num"
     raida_url="https://$raida.cloudcoin.global/service/show"
-    nn=`$JQ_CMD '.cloudcoin[].nn' $coinfile | tr -d '"'`
-    sn=`$JQ_CMD '.cloudcoin[].sn' $coinfile | tr -d '"'`
-    string_an=`$JQ_CMD -r '.cloudcoin[].an[]' $coinfile`
-    array_an=( $string_an )
+    nn=$($JQ_CMD '.cloudcoin[].nn' $coinfile | tr -d '"')
+    sn=$($JQ_CMD '.cloudcoin[].sn' $coinfile | tr -d '"')
+    string_an=$($JQ_CMD -r '.cloudcoin[].an[]' $coinfile)
+    array_an=($string_an)
     an="${array_an[$node_num]}"
     denom=$(Get_denom $sn)
 
@@ -2723,13 +2671,13 @@ _SW_GetTag(){
     else
         status="http-error"
     fi
-    
+
     tag=""
-    if [ "$status" == "pass" ];then
+    if [ "$status" == "pass" ]; then
         tag="$(echo $http_response | $JQ_CMD -r '.message[0].tag')"
     fi
 
-    if [ -z "$tag" -o "$tag" == "null" ];then
+    if [ -z "$tag" -o "$tag" == "null" ]; then
         echo "NoTagName"
     else
         echo "$tag"
@@ -2751,7 +2699,7 @@ urlencode() {
     return 0
 }
 
-_SW_RenameTag(){
+_SW_RenameTag() {
     local node_num coinfile tag new_tag
     local input
     node_num=$1
@@ -2760,14 +2708,14 @@ _SW_RenameTag(){
     # Check the local testcoin file
     Coin_validation $coinfile
     is_testcoin=$?
-    [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+    [ $is_testcoin -eq 1 ] && return 1 # testcoin file not found or with wrong format
 
     raida="raida$node_num"
     raida_url="https://$raida.cloudcoin.global/service/rename_tag"
-    nn=`$JQ_CMD '.cloudcoin[].nn' $coinfile | tr -d '"'`
-    sn=`$JQ_CMD '.cloudcoin[].sn' $coinfile | tr -d '"'`
-    string_an=`$JQ_CMD -r '.cloudcoin[].an[]' $coinfile`
-    array_an=( $string_an )
+    nn=$($JQ_CMD '.cloudcoin[].nn' $coinfile | tr -d '"')
+    sn=$($JQ_CMD '.cloudcoin[].sn' $coinfile | tr -d '"')
+    string_an=$($JQ_CMD -r '.cloudcoin[].an[]' $coinfile)
+    array_an=($string_an)
     an="${array_an[$node_num]}"
     denom=$(Get_denom $sn)
     # for debug only
@@ -2779,22 +2727,22 @@ _SW_RenameTag(){
     # Test the Echo
     test_echo=$(_echo $node_num)
     run_echo=$?
-    if [ $run_echo -eq 1 ];then
-        Error "$ERROR_05"    # Echo Failed
+    if [ $run_echo -eq 1 ]; then
+        Error "$ERROR_05" # Echo Failed
         return 1
     else
         tag=$(_SW_GetTag $node_num $coinfile)
         #echo $tag
-        if [ "$tag" == "NoTagName" ];then
+        if [ "$tag" == "NoTagName" ]; then
             echo
             echo "[Rename_Tag]"
             echo "SN ID: $sn"
             echo -e "Status:$_GREEN_ No coins in transfer pool!$_REST_"
             echo
-        else 
+        else
             post_tag="$(urlencode "$tag")"
             echo -n "The TAG is currently \"$tag\", would you like to rename it to ? " && read input
-            if [ -z "$input" ];then
+            if [ -z "$input" ]; then
                 new_tag="Test00000"
             else
                 new_tag="$(urlencode "$input")"
@@ -2805,7 +2753,7 @@ _SW_RenameTag(){
             http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
             http_retval=$?
             end_s=$(Timer)
-            elapsed=$(( (end_s-start_s)/1000000 ))
+            elapsed=$(((end_s - start_s) / 1000000))
 
             if [ $http_retval -eq 0 ]; then
                 status=$(echo $http_response | $JQ_CMD -r '.status')
@@ -2813,7 +2761,7 @@ _SW_RenameTag(){
                 status="http-error"
             fi
 
-            if [ "$status" == "pass" ];then
+            if [ "$status" == "pass" ]; then
                 status_color="$_GREEN_$status$_REST_"
                 response_color="$_GREEN_$http_response$_REST_"
             else
@@ -2834,7 +2782,7 @@ _SW_RenameTag(){
     fi
 }
 
-_SW_Transfer(){
+_SW_Transfer() {
     local node_num from_id_coinfile to_id_coinfile bank_coinfile
     local s i
     node_num=$1
@@ -2843,18 +2791,17 @@ _SW_Transfer(){
     bank_coinfile="$4"
 
     # Check the local testcoin file
-    for f in $from_id_coinfile $to_id_coinfile $bank_coinfile
-    do
+    for f in $from_id_coinfile $to_id_coinfile $bank_coinfile; do
         Coin_validation $f
         is_testcoin=$?
-        [ $is_testcoin -eq 1 ] && return 1  # testcoin file not found or with wrong format
+        [ $is_testcoin -eq 1 ] && return 1 # testcoin file not found or with wrong format
     done
 
     raida="raida$node_num"
     raida_url="https://$raida.cloudcoin.global/service/transfer"
-    sn=`$JQ_CMD '.cloudcoin[].sn' $from_id_coinfile | tr -d '"'`
-    string_an=`$JQ_CMD -r '.cloudcoin[].an[]' $from_id_coinfile`
-    array_an=( $string_an )
+    sn=$($JQ_CMD '.cloudcoin[].sn' $from_id_coinfile | tr -d '"')
+    string_an=$($JQ_CMD -r '.cloudcoin[].an[]' $from_id_coinfile)
+    array_an=($string_an)
     an="${array_an[$node_num]}"
     denom=$(Get_denom $sn)
     # for debug only
@@ -2862,9 +2809,9 @@ _SW_Transfer(){
     #echo "an-> $an"
     #echo "denom-> $denom"
 
-    to_sn=`$JQ_CMD '.cloudcoin[].sn' $to_id_coinfile | tr -d '"'`
-    bank_sn=`$JQ_CMD -r '.cloudcoin[].sn' $bank_coinfile`
-    bank_sns=( $bank_sn )
+    to_sn=$($JQ_CMD '.cloudcoin[].sn' $to_id_coinfile | tr -d '"')
+    bank_sn=$($JQ_CMD -r '.cloudcoin[].sn' $bank_coinfile)
+    bank_sns=($bank_sn)
     # for debug only
     #echo "to_sn-> $to_sn"
     #echo "bank_sns-> ${bank_sns[@]}"
@@ -2872,22 +2819,21 @@ _SW_Transfer(){
     # Test the Echo
     test_echo=$(_echo $node_num)
     run_echo=$?
-    if [ $run_echo -eq 1 ];then
-        Error "$ERROR_05"    # Echo Failed
+    if [ $run_echo -eq 1 ]; then
+        Error "$ERROR_05" # Echo Failed
         return 1
     else
         index=0
         post_sns=""
-        for s in "${bank_sns[@]}"
-        do
-            if [ $index -eq 0 ];then
+        for s in "${bank_sns[@]}"; do
+            if [ $index -eq 0 ]; then
                 post_sns="sns[]=$s"
             else
                 post_sns="$post_sns&sns[]=$s"
             fi
             ((index++))
         done
-        
+
         post_tag="TransferTo$to_sn"
         post_data="sn=$sn&an=$an&pan=$an&denomination=$denom&to_sn=$to_sn&tag=$post_tag&$post_sns"
         #echo $post_data
@@ -2896,7 +2842,7 @@ _SW_Transfer(){
         http_response=$($CURL_CMD $CURL_OPT_multi -d "$post_data" $raida_url 2>&1)
         http_retval=$?
         end_s=$(Timer)
-        elapsed=$(( (end_s-start_s)/1000000 ))
+        elapsed=$(((end_s - start_s) / 1000000))
 
         if [ $DEBUG -eq 1 ]; then
             Log "[_SW_Transfer] " "POST_URL: $raida_url "
@@ -2907,15 +2853,14 @@ _SW_Transfer(){
 
         if [ $http_retval -eq 0 ]; then
             http_status=$(echo $http_response | $JQ_CMD -r '.[].status')
-            http_array_status=( $http_status )
+            http_array_status=($http_status)
             ## for debugging only
             #echo "http_array_status = ${http_array_status[@]}"
 
             status_color=""
             notpass=0
-            for ((i=0;i<${#http_array_status[@]};i++))
-            do
-                if [ "${http_array_status[$i]}" == "pass" ];then
+            for ((i = 0; i < ${#http_array_status[@]}; i++)); do
+                if [ "${http_array_status[$i]}" == "pass" ]; then
                     status_color+="$_GREEN_${bank_sns[$i]}->${http_array_status[$i]}$_REST_ "
                 else
                     notpass=1
@@ -2923,7 +2868,7 @@ _SW_Transfer(){
                 fi
             done
 
-            if [ $notpass -eq 1 ];then
+            if [ $notpass -eq 1 ]; then
                 response_color="$_RED_$http_response$_REST_"
             else
                 response_color="$_GREEN_$http_response$_REST_"
@@ -2949,14 +2894,14 @@ _SW_Transfer(){
 
 }
 
-Coin_validation(){
+Coin_validation() {
     local file
     file="$1"
 
-    if [ -f "$file" ];then
+    if [ -f "$file" ]; then
         $JQ_CMD '.cloudcoin' "$file" >/dev/null 2>&1
-        is_json=$? 
-        if [ $is_json -eq 0 ];then # Is JSON
+        is_json=$?
+        if [ $is_json -eq 0 ]; then # Is JSON
             echo -e "Loading test coins: $WORKDIR/$file"
             List_denoms "$file"
             return 0
@@ -2970,36 +2915,35 @@ Coin_validation(){
     fi
 }
 
-List_denoms(){
+List_denoms() {
     local coinfile sn k denoms_1 denoms_5 denoms_25 denoms_100 denoms_250
     local array_sn
     coinfile="$1"
-    sn=`$JQ_CMD -r '.cloudcoin[].sn' $coinfile`
-    array_sn=( $sn )
+    sn=$($JQ_CMD -r '.cloudcoin[].sn' $coinfile)
+    array_sn=($sn)
 
     denoms_1=0
     denoms_5=0
     denoms_25=0
     denoms_100=0
     denoms_250=0
-    for k in "${array_sn[@]}"
-    do
+    for k in "${array_sn[@]}"; do
         case "$(Get_denom $k)" in
-            1)
-                ((denoms_1++))
-                ;;
-            5)
-                ((denoms_5++))
-                ;;
-            25)
-                ((denoms_25++))
-                ;;
-            100)
-                ((denoms_100++))
-                ;;
-            250)
-                ((denoms_250++))
-                ;;
+        1)
+            ((denoms_1++))
+            ;;
+        5)
+            ((denoms_5++))
+            ;;
+        25)
+            ((denoms_25++))
+            ;;
+        100)
+            ((denoms_100++))
+            ;;
+        250)
+            ((denoms_250++))
+            ;;
         esac
     done
 
@@ -3012,19 +2956,19 @@ List_denoms(){
     echo
 }
 
-addr_validation(){
+addr_validation() {
     local addr
     addr=$(ToLower $1)
     regex_name="^[a-zA-Z0-9\.-]*(.skywallet.cc)$"
     regex_ip="^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$"
-    if [[ $addr =~ $regex_name ]];then
+    if [[ $addr =~ $regex_name ]]; then
         echo "FQDN:$addr"
         return 0
-    elif [[ $addr =~ $regex_ip ]];then
+    elif [[ $addr =~ $regex_ip ]]; then
         echo "IP:$addr"
         return 0
     else
-        echo 
+        echo
         return 1
     fi
 }
@@ -3039,18 +2983,16 @@ get_ip() {
 
 ip2dec() {
     local a b c d ip=$@
-    IFS=. read -r a b c d <<< "$ip"
+    IFS=. read -r a b c d <<<"$ip"
     printf '%d\n' "$((a * 256 ** 3 + b * 256 ** 2 + c * 256 + d))"
 }
 
 dec2ip() {
     local ip dec=$@
-    for e in {3..0}
-    do
-        ((octet = dec / (256 ** e) ))
+    for e in {3..0}; do
+        ((octet = dec / (256 ** e)))
         ((dec -= octet * 256 ** e))
-        if [ -z $ip ]
-        then
+        if [ -z $ip ]; then
             ip+=$octet
         else
             ip+=$delim$octet
@@ -3060,17 +3002,17 @@ dec2ip() {
     printf '%s\n' "$ip"
 }
 
-Check_Internet(){
-    if $CURL_CMD --silent --head http://www.google.com/  | egrep "^HTTP\/.* 200 OK" >/dev/null;then  
+Check_Internet() {
+    if $CURL_CMD --silent --head http://www.google.com/ | egrep "^HTTP\/.* 200 OK" >/dev/null; then
         #echo Internet status: OK
-        return 0  
-    else  
-        #echo Internet status: ERROR 
-        return 1 
-    fi  
+        return 0
+    else
+        #echo Internet status: ERROR
+        return 1
+    fi
 }
 
-Node_Latency(){
+Node_Latency() {
     local url
     url="$1"
 
@@ -3078,71 +3020,70 @@ Node_Latency(){
     return
 }
 
-Check_html_template(){
+Check_html_template() {
     local html_template
     local html_report
 
     now=$(date +"%F %T")
     html_template="$1"
-    if [ ! -r $html_template ];then
+    if [ ! -r $html_template ]; then
         return 1
-    fi 
-    html_report="$( echo $html_template | sed 's/template/test/g' )"
+    fi
+    html_report="$(echo $html_template | sed 's/template/test/g')"
     [ -d $HTML_DIR ] || mkdir $HTML_DIR
     cp -f $html_template $HTML_DIR/$html_report
-    sed -i "s/\[TIME\]/$now/g" $HTML_DIR/$html_report 
+    sed -i "s/\[TIME\]/$now/g" $HTML_DIR/$html_report
     return 0
 }
 
-ask_html(){
+ask_html() {
     local input
     local opt
     local retval
-    
+
     opt="$1"
     save_to_html="NO"
     echo -n "$STRING_06 " && read input
     echo
     [ -z $input ] && input="N"
-    if [ "$input" == "y" -o "$input" == "Y" ];then
+    if [ "$input" == "y" -o "$input" == "Y" ]; then
         save_to_html="YES"
 
-        case "$opt" in 
-            FIX)
-                for ((i=1;i<=4;i++))
-                do
-                    html_template="fix${i}template.html"
-                    Check_html_template "$html_template"
-                    retval=$?
-                    if [ $retval -eq 1 ];then
-                        Error "Error: The file $WORKDIR/$html_template Not Found."
-                        return 1
-                    fi
-                done
-                ;;
-            
-            HINTS)
-                html_template="hintstemplate.html"
-                ;;
+        case "$opt" in
+        FIX)
+            for ((i = 1; i <= 4; i++)); do
+                html_template="fix${i}template.html"
+                Check_html_template "$html_template"
+                retval=$?
+                if [ $retval -eq 1 ]; then
+                    Error "Error: The file $WORKDIR/$html_template Not Found."
+                    return 1
+                fi
+            done
+            ;;
 
-            TICKET)
-                html_template="tickettemplate.html"
-                ;;
+        HINTS)
+            html_template="hintstemplate.html"
+            ;;
 
-            DETECT)
-                html_template="detecttemplate.html"
-                ;;
+        TICKET)
+            html_template="tickettemplate.html"
+            ;;
 
-            ECHO)
-                html_template="echotemplate.html"
-                ;; 
+        DETECT)
+            html_template="detecttemplate.html"
+            ;;
+
+        ECHO)
+            html_template="echotemplate.html"
+            ;;
 
         esac
 
         if [ "$opt" != "FIX" ]; then
             Check_html_template "$html_template"
             retval=$?
-            if [ $retval -eq 1 ];then
+            if [ $retval -eq 1 ]; then
                 Error "Error: The file $WORKDIR/$html_template Not Found."
                 return 1
             fi
@@ -3152,7 +3093,7 @@ ask_html(){
     return 0
 }
 
-Basic_htmlreport(){
+Basic_htmlreport() {
     local html_report
     local raida_node
     local get_status
@@ -3185,41 +3126,41 @@ Basic_htmlreport(){
     html_response="$(echo $get_response | sed -e 's/\&/\\&/g' -e 's/\[/\\[/g' -e 's/\]/\\]/g' -e 's/\;/\\;/g')"
 
     case "$html" in
-        hintstest.html)
-            is_success=$(echo "$get_status" | grep -i success | wc -l)
-            if [ "$is_success" == "1" ];then
-                html_status="<span style='color:green;'>${get_status}</span>"
-            else
-                html_status="<span style='color:red;'>${get_status}</span>"
-            fi
-            ;;
+    hintstest.html)
+        is_success=$(echo "$get_status" | grep -i success | wc -l)
+        if [ "$is_success" == "1" ]; then
+            html_status="<span style='color:green;'>${get_status}</span>"
+        else
+            html_status="<span style='color:red;'>${get_status}</span>"
+        fi
+        ;;
 
-        tickettest.html)
-            is_success=$(echo "$get_status" | grep -w ticket | wc -l)
-            if [ "$is_success" == "1" ];then
-                html_status="<span style='color:green;'>${get_status}</span>"
-            else
-                html_status="<span style='color:red;'>${get_status}</span>"
-            fi
-            ;;
+    tickettest.html)
+        is_success=$(echo "$get_status" | grep -w ticket | wc -l)
+        if [ "$is_success" == "1" ]; then
+            html_status="<span style='color:green;'>${get_status}</span>"
+        else
+            html_status="<span style='color:red;'>${get_status}</span>"
+        fi
+        ;;
 
-        detecttest.html)
-            is_success=$(echo "$get_status" | grep -w pass | wc -l)
-            if [ "$is_success" == "1" ];then
-                html_status="<span style='color:green;'>${get_status}</span>"
-            else
-                html_status="<span style='color:red;'>${get_status}</span>"
-            fi
-            ;;
+    detecttest.html)
+        is_success=$(echo "$get_status" | grep -w pass | wc -l)
+        if [ "$is_success" == "1" ]; then
+            html_status="<span style='color:green;'>${get_status}</span>"
+        else
+            html_status="<span style='color:red;'>${get_status}</span>"
+        fi
+        ;;
 
-        echotest.html)
-            is_success=$(echo "$get_status" | grep -w ready | wc -l)
-            if [ "$is_success" == "1" ];then
-                html_status="<span style='color:green;'>${get_status}</span>"
-            else
-                html_status="<span style='color:red;'>${get_status}</span>"
-            fi
-            ;;
+    echotest.html)
+        is_success=$(echo "$get_status" | grep -w ready | wc -l)
+        if [ "$is_success" == "1" ]; then
+            html_status="<span style='color:green;'>${get_status}</span>"
+        else
+            html_status="<span style='color:red;'>${get_status}</span>"
+        fi
+        ;;
 
     esac
 
@@ -3230,7 +3171,7 @@ Basic_htmlreport(){
     sed -i "s|$key_ver|$html_ver|g" $html_report
 }
 
-Fix_htmlreport(){
+Fix_htmlreport() {
     local html_report
     local raida_node
     local fix_corner
@@ -3257,16 +3198,16 @@ Fix_htmlreport(){
     key_request="\[${raida_node}RAIDAREQUEST\]"
     key_response="\[${raida_node}RAIDARESPONSE\]"
     html_ms="Milliseconds: $get_ms"
-    
+
     html_request="$(echo $get_request | sed -e 's/\&/\\&/g' -e 's/\[/\\[/g' -e 's/\]/\\]/g' -e 's/\;/\\;/g')"
     html_response="$(echo $get_response | sed -e 's/\&/\\&/g' -e 's/\[/\\[/g' -e 's/\]/\\]/g' -e 's/\;/\\;/g')"
 
-    if [ "$get_status" != "success" ];then
+    if [ "$get_status" != "success" ]; then
         html_status="<span style='color:red;'>${get_status}</span>"
     else
         html_status="<span style='color:green;'>${get_status}</span>"
     fi
-    
+
     sed -i "s|$key_status|$html_status|g" $html_report
     sed -i "s|$key_ms|$html_ms|g" $html_report
     sed -i "s|${key_request}|${html_request}|g" $html_report
@@ -3274,7 +3215,7 @@ Fix_htmlreport(){
 
 }
 
-Output(){
+Output() {
     local node status ms
     node=$1
     status="$2"
@@ -3282,13 +3223,13 @@ Output(){
     printf " %.18s [%4b] \n" "RAIDA($node).............." "$status"
 }
 
-Output2(){
+Output2() {
     local msg
     msg=$1
     printf "   %-20b \n" "[!]:${_RED_}$msg${_REST_}"
 }
 
-Get_version(){
+Get_version() {
     local node
     local version
     node=$1
@@ -3306,13 +3247,12 @@ Get_version(){
     echo "$version"
 }
 
-Get_coin_files(){
+Get_coin_files() {
     local files coinfile coins_list
     coinfile=""
     coins_list=""
     files="$(ls *.stack 2>/dev/null)"
-    for coinfile in $files
-    do
+    for coinfile in $files; do
         Coin_validation "$coinfile" >/dev/null
         [ $? -eq 0 ] && coins_list+=("$coinfile")
     done
@@ -3320,25 +3260,60 @@ Get_coin_files(){
     return
 }
 
-Log() {  # classic logger
+Log() { # classic logger
     local prefix="[$(date +%Y/%m/%d\ %H:%M:%S)]: "
-    echo "${prefix} $@" >> $LOG_FILE 2>&1
+    echo "${prefix} $@" >>$LOG_FILE 2>&1
 }
 
 ToLower() {
-   echo $1 | tr "[:upper:]" "[:lower:]"
+    echo $1 | tr "[:upper:]" "[:lower:]"
 }
 
 ToUpper() {
-   echo $1 | tr "[:lower:]" "[:upper:]"
+    echo $1 | tr "[:lower:]" "[:upper:]"
 }
 
+Check_Update() {
+    local input key input_line found git_ver
+    input=$($CURL_CMD -m 4 --raw -r 0-2000 https://raw.githubusercontent.com/a-lang/RAIDA_Tester/master/raida_tester.sh 2>/dev/null)
+    key="VERSION"
+
+    found=""
+    while IFS='' read -r input_line; do
+        if [[ ${input_line/${key}/} != "$input_line" ]]; then
+            found="${input_line}"
+            break
+        fi
+
+    done <<<"${input}"
+
+    if [[ -z $found ]]; then return 1; fi
+
+    git_ver="$(echo $found | cut -d = -f2 | sed 's/\"//g')"
+    if [[ -n $git_ver && "$git_ver" != "$VERSION" ]]; then
+        if [[ -n $notifier ]]; then
+            notify-send -u normal "Raida_tester Update!" "New version of Raida_tester available\!\nCurrent version: ${VERSION}\n\New version: ${git_ver}\nDownload at github.com/a-lang/RAIDA_Tester" \
+                -i face-glasses -t 10000
+            return 0
+        fi
+    fi
+    return 1
+}
 
 cd $WORKDIR
-[ -f $LOG_FILE ] && cat /dev/null > $LOG_FILE
-Check_CMD $CURL_CMD
-Check_CMD $JQ_CMD
+[ -f $LOG_FILE ] && cat /dev/null >$LOG_FILE
+if ! Check_CMD $CURL_CMD; then
+    Show_requirement
+    exit
+elif ! Check_CMD $JQ_CMD; then
+    Show_requirement
+    exit
+fi
+
+if Check_CMD $NOTIFY_CMD; then notifier=1; else unset notifier; fi
+
 Show_head
+Check_Update
 Main
 
 exit
