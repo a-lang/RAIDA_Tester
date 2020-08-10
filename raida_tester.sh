@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Created: 2017-3-20, A-Lang
+# Created: 2017-3-20, A-Lang (alang.hsu@gmail.com)
 #
 # Change Logs:
 #   17/10/14 - Added test for multi_detect
@@ -9,10 +9,11 @@
 #   19/05/25 - Added datetime for Advanced ECHO
 #   19/06/09 - Added multi_fix
 #   19/06/27 - Update _all_echo
+#   More logs are at Github website.
 #
 
 # Variables
-VERSION="200808"
+VERSION="200811"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -2906,7 +2907,7 @@ Coin_validation() {
             List_denoms "$file"
             return 0
         else # Not JSON
-            Error "Error: Test Coin File seems to be Wrong Format ($WORKDIR/$file)"
+            Error "Error: Unable to access the Test Coin File. ($WORKDIR/$file) \nProbably Causes:\n - The Test Coin File is not a valid JSON format.\n - The Test Coin File has no properly permission settings."
             return 1
         fi
     else
