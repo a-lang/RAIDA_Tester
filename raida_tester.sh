@@ -21,7 +21,7 @@ TESTCOINFILE4="testcoin_id1_x1.stack"
 TESTCOINFILE5="testcoin_id2_x1.stack"
 TESTCOINFILE6="testcoin_bank_x3.stack"
 # for Debgugging only
-DEBUG=1 # True:1 , False:0
+DEBUG=0 # True:1 , False:0
 LOG_FILE="debug.log"
 #
 RAIDA_NUMS=25
