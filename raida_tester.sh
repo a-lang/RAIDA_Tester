@@ -21,7 +21,7 @@ TESTCOINFILE4="testcoin_id1_x1.stack"
 TESTCOINFILE5="testcoin_id2_x1.stack"
 TESTCOINFILE6="testcoin_bank_x3.stack"
 # for Debgugging only
-DEBUG=0 # True:1 , False:0
+DEBUG=1 # True:1 , False:0
 LOG_FILE="debug.log"
 #
 RAIDA_NUMS=25
@@ -1565,9 +1565,9 @@ _multi_detect() {
     index=0
     for d in "${array_denom[@]}"; do
         if [ $index -eq 0 ]; then
-            post_denoms="denomination[]=$d"
+            post_denoms="dn[]=$d"
         else
-            post_denoms="$post_denoms&denomination[]=$d"
+            post_denoms="$post_denoms&dn[]=$d"
         fi
         ((index++))
     done
@@ -1669,14 +1669,14 @@ _multi_detect2() {
                             post_nns="nns[]=${array_nn[$n]}"
                             post_ans="ans[]=${array_an[$n]}"
                             post_pans="pans[]=${array_an[$n]}"
-                            post_denoms="denomination[]=${array_denom[$n]}"
+                            post_denoms="dn[]=${array_denom[$n]}"
 
                         else
                             post_sns="$post_sns&sns[]=${array_sn[$n]}"
                             post_nns="$post_nns&nns[]=${array_nn[$n]}"
                             post_ans="$post_ans&ans[]=${array_an[$n]}"
                             post_pans="$post_pans&pans[]=${array_an[$n]}"
-                            post_denoms="$post_denoms&denomination[]=${array_denom[$n]}"
+                            post_denoms="$post_denoms&dn[]=${array_denom[$n]}"
                         fi
                         ((n++))
                     done
@@ -1695,13 +1695,13 @@ _multi_detect2() {
                             post_nns="nns[]=${array_nn[$n]}"
                             post_ans="ans[]=${array_an[$n]}"
                             post_pans="pans[]=${array_an[$n]}"
-                            post_denoms="denomination[]=${array_denom[$n]}"
+                            post_denoms="dn[]=${array_denom[$n]}"
                         else
                             post_sns="$post_sns&sns[]=${array_sn[$n]}"
                             post_nns="$post_nns&nns[]=${array_nn[$n]}"
                             post_ans="$post_ans&ans[]=${array_an[$n]}"
                             post_pans="$post_pans&pans[]=${array_an[$n]}"
-                            post_denoms="$post_denoms&denomination[]=${array_denom[$n]}"
+                            post_denoms="$post_denoms&dn[]=${array_denom[$n]}"
                         fi
                         ((n++))
                     done
