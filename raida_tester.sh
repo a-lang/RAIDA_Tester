@@ -13,7 +13,7 @@
 #
 
 # Variables
-VERSION="200811"
+VERSION="200822"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
