@@ -13,7 +13,7 @@
 #
 
 # Variables
-VERSION="200822"
+VERSION="200823"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -1686,7 +1686,8 @@ _multi_detect2() {
                     #echo "-> $post_pans"
                     #echo "-> $post_denoms"
                     post_data="$post_nns&$post_sns&$post_ans&$post_pans&$post_denoms"
-                    _post_multi_detect "$node" "$post_data" $notes_post
+                    #_post_multi_detect "$node" "$post_data" $notes_post
+                    _post_multi_detect_b "$node" "$post_data" $notes_post
                 else
                     last_round=$((($notes_total - $n)))
                     for ((i = 0; i < $last_round; i++)); do
@@ -1711,7 +1712,8 @@ _multi_detect2() {
                     #echo "last-> $post_pans"
                     #echo "last-> $post_denoms"
                     post_data="$post_nns&$post_sns&$post_ans&$post_pans&$post_denoms"
-                    _post_multi_detect "$node" "$post_data" $last_round
+                    #_post_multi_detect "$node" "$post_data" $last_round
+                    _post_multi_detect_b "$node" "$post_data" $last_round
                 fi
             done
             break
@@ -1773,6 +1775,83 @@ _post_multi_detect() {
 
             else
                 detect_retval=1
+            fi
+        else
+            detect_retval=1
+        fi
+    else
+        detect_retval=1
+    fi
+
+    if [ $detect_retval -eq 1 ]; then
+        printf " -> Posted: %3d | Detected: ${_RED_}%3d${_REST_} | Pass: ${_RED_}%3d${_REST_} , Fail: ${_RED_}%3d${_REST_}\n" $post_nums 0 0 0
+    fi
+
+}
+
+_post_multi_detect_b() {
+    unset array_status
+    local node post_data status s pass_count fail_count
+    local raida raida_url start_s end_s elapsed total_count
+    node="$1"
+    post_data="$2"
+    post_nums=$3
+
+    raida="raida$node"
+    raida_url="https://$raida.cloudcoin.global/service/multi_detect"
+    detect_retval=0
+    start_s=$(Timer)
+    post_data="b=t&$post_data"
+    http_response=$($CURL_CMD $CURL_OPT_multi -d "$post_data" $raida_url 2>&1)
+    http_retval=$?
+    end_s=$(Timer)
+    elapsed=$(((end_s - start_s) / 1000000))
+    ## for debugging only
+    #echo $http_response
+
+    if [ $DEBUG -eq 1 ]; then
+        Log "[_post_multi_detect_b] " "POST_URL: $raida_url "
+        Log "[_post_multi_detect_b] " "POST_DATA: $post_data"
+        Log "[_post_multi_detect_b] " "POST_RESPONSE: $http_response"
+        Log "[_post_multi_detect_b] " "End of POST"
+    fi
+
+    if [ $http_retval -eq 0 ]; then
+        status=$(echo $http_response | $JQ_CMD -r '.status' 2>&1)
+        status_retval=$?
+        ## for debug only
+        #echo $status
+
+        if [ $status_retval -eq 0 ]; then
+            pass_count=0
+            fail_count=0
+            total_count=0
+            if [ "$status" == "allpass" ]; then
+                total_count=$post_nums
+                pass_count=$post_nums
+            elif [ "$status" == "allfail" ]; then
+                total_count=$post_nums
+                fail_count=$post_nums
+            elif [ $status == "mixed" ]; then
+                msg=$(echo $http_response | $JQ_CMD -r '.message' 2>&1)
+                array_msg=($(echo "$msg" | sed "s/,/ /g"))
+                total_count=${#array_msg[@]}
+                if [ $total_count -eq $post_nums ]; then
+                    for s in "${array_msg[@]}"; do
+                        [ "$s" == "pass" ] && ((pass_count++))
+                        [ "$s" == "fail" ] && ((fail_count++))
+                    done
+                else
+                    detect_retval=1
+                fi
+            fi
+
+            if [ $detect_retval -eq 0 ]; then
+                if [ $elapsed -gt $WARN_MS ]; then
+                    printf " -> Posted: %3d | Detected: %3d | Pass: %3d , Fail: %3d (${_RED_}%4i${_REST_}ms)\n" $post_nums $total_count $pass_count $fail_count $elapsed
+                else
+                    printf " -> Posted: %3d | Detected: %3d | Pass: %3d , Fail: %3d (%4ims)\n" $post_nums $total_count $pass_count $fail_count $elapsed
+                fi
             fi
         else
             detect_retval=1
