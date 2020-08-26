@@ -13,7 +13,7 @@
 #
 
 # Variables
-VERSION="200823"
+VERSION="200827"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -1790,9 +1790,10 @@ _post_multi_detect() {
 }
 
 _post_multi_detect_b() {
-    unset array_status
+    unset array_msg
     local node post_data status s pass_count fail_count
     local raida raida_url start_s end_s elapsed total_count
+    local ex_time
     node="$1"
     post_data="$2"
     post_nums=$3
@@ -1823,6 +1824,7 @@ _post_multi_detect_b() {
         #echo $status
 
         if [ $status_retval -eq 0 ]; then
+            ex_time=$(echo $http_response | $JQ_CMD -r '.ex_time' 2>&1)
             pass_count=0
             fail_count=0
             total_count=0
@@ -1848,9 +1850,9 @@ _post_multi_detect_b() {
 
             if [ $detect_retval -eq 0 ]; then
                 if [ $elapsed -gt $WARN_MS ]; then
-                    printf " -> Posted: %3d | Detected: %3d | Pass: %3d , Fail: %3d (${_RED_}%4i${_REST_}ms)\n" $post_nums $total_count $pass_count $fail_count $elapsed
+                    printf " -> Posted: %3d | Detected: %3d | Pass: %3d | Fail: %3d | Ex_Time: %-6.3f (latency ${_RED_}%4i${_REST_}ms)\n" $post_nums $total_count $pass_count $fail_count $elapsed
                 else
-                    printf " -> Posted: %3d | Detected: %3d | Pass: %3d , Fail: %3d (%4ims)\n" $post_nums $total_count $pass_count $fail_count $elapsed
+                    printf " -> Posted: %3d | Detected: %3d | Pass: %3d | Fail: %3d | Ex_Time: %-6.3f (latency %4ims)\n" $post_nums $total_count $pass_count $fail_count $ex_time $elapsed
                 fi
             fi
         else
@@ -1861,7 +1863,7 @@ _post_multi_detect_b() {
     fi
 
     if [ $detect_retval -eq 1 ]; then
-        printf " -> Posted: %3d | Detected: ${_RED_}%3d${_REST_} | Pass: ${_RED_}%3d${_REST_} , Fail: ${_RED_}%3d${_REST_}\n" $post_nums 0 0 0
+        printf " -> Posted: %3d | Detected: ${_RED_}%3d${_REST_} | Pass: ${_RED_}%3d${_REST_} | Fail: ${_RED_}%3d${_REST_}\n" $post_nums 0 0 0
     fi
 
 }
