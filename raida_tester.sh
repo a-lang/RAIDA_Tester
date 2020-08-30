@@ -13,16 +13,27 @@
 #
 
 # Variables
-VERSION="200827"
+VERSION="200830"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
 TESTCOINFILE4="testcoin_id1_x1.stack"
 TESTCOINFILE5="testcoin_id2_x1.stack"
 TESTCOINFILE6="testcoin_bank_x3.stack"
+
 # for Debgugging only
 DEBUG=0 # True:1 , False:0
 LOG_FILE="debug.log"
+
+# Extra Custom Environment Variables
+# e.g:
+# Case #1, for self-signed certificates:
+#   export TESTER_CURL_EXTRA_OPT="-k"
+# Case #2, for non-https:
+#   export TESTER_HTTP_PROTO="http"
+CURL_EXTRA_OPT=$TESTER_CURL_EXTRA_OPT
+HTTP_PROTO=${TESTER_HTTP_PROTO:-https}
+
 #
 RAIDA_NUMS=25
 MAX_LATENCY=15
@@ -33,8 +44,8 @@ _GREEN_='\033[32m'
 _RED_='\033[31m'
 _BOLD_='\033[1m'
 CURL_CMD="curl"
-CURL_OPT="-qSfs -m 60"
-CURL_OPT_multi="-qSfs -m 60 -X POST"
+CURL_OPT="$CURL_EXTRA_OPT -qSfs -m 60"
+CURL_OPT_multi="$CURL_EXTRA_OPT -qSfs -m 60 -X POST"
 JQ_CMD="jq"
 GETIP_CMD="dig"
 PYTHON_CMD="python"
@@ -87,7 +98,7 @@ Show_head() {
 # You have to have several authentic CloudCoin .stack files called          #
 # 'testcoin*.stack' in the same folder as this program to run tests.        #
 #############################################################################
-[Version: ${VERSION}]|[Debug: $([ $DEBUG -eq 1 ] && echo "ON" || echo "OFF")]
+[Version: ${VERSION}]|[Debug: $([ $DEBUG -eq 1 ] && echo "ON" || echo "OFF")]|[Protocol: $(ToUpper $HTTP_PROTO)]
 EOF
 }
 
@@ -768,7 +779,7 @@ _all_echo2() {
         _echo $n >/dev/null 2>&1
         run_echo=$?
         if [ $run_echo -eq 0 ]; then
-            url="https://raida$n.cloudcoin.global/service/echo"
+            url="$(ToLower ${HTTP_PROTO})://raida$n.cloudcoin.global/service/echo"
             seconds=$(Node_Latency "$url")
             if [ $(echo "$seconds > $warn" | bc) -eq 1 ]; then
                 latency="${_RED_}$seconds${_REST_}"
@@ -798,7 +809,7 @@ _echo() {
     echo_retval=0
     input="$1"
     raida="raida$input"
-    raida_url="https://$raida.cloudcoin.global/service/echo"
+    raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/echo"
     start_s=$(Timer)
     http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
     http_retval=$?
@@ -892,7 +903,7 @@ _detect() {
 
     input="$1"
     raida="raida$input"
-    raida_url="https://$raida.cloudcoin.global/service/detect"
+    raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/detect"
     nn=$($JQ_CMD '.cloudcoin[].nn' $TESTCOINFILE1 | tr -d '"')
     sn=$($JQ_CMD '.cloudcoin[].sn' $TESTCOINFILE1 | tr -d '"')
     string_an=$($JQ_CMD -r '.cloudcoin[].an[]' $TESTCOINFILE1)
@@ -1005,7 +1016,7 @@ _get_ticket() {
 
     input="$1"
     raida="raida$input"
-    raida_url="https://$raida.cloudcoin.global/service/get_ticket"
+    raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/get_ticket"
     nn=$($JQ_CMD '.cloudcoin[].nn' $TESTCOINFILE1 | tr -d '"')
     sn=$($JQ_CMD '.cloudcoin[].sn' $TESTCOINFILE1 | tr -d '"')
     string_an=$($JQ_CMD -r '.cloudcoin[].an[]' $TESTCOINFILE1)
@@ -1135,7 +1146,7 @@ _hints() {
     if [ $Hints_ticket_retval -eq 0 ]; then
         echo "Last ticket is: $ticket"
         raida="raida$input"
-        raida_url="https://$raida.cloudcoin.global/service/hints"
+        raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/hints"
         raida_url="$raida_url?rn=$ticket"
         start_s=$(Timer)
         http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
@@ -1282,7 +1293,7 @@ _fix() {
             if [ $Fix_ticket_retval -eq 0 ]; then
                 raida="raida$fixed_server"
                 an="${array_an[$fixed_server]}"
-                raida_url="https://$raida.cloudcoin.global/service/fix"
+                raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/fix"
                 raida_url="$raida_url?fromserver1=${fromserver[1]}&message1=${message[1]}&fromserver2=${fromserver[2]}&message2=${message[2]}&fromserver3=${fromserver[3]}&message3=${message[3]}&pan=$an"
                 start_s=$(Timer)
                 http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
@@ -1409,7 +1420,7 @@ _fix_all_corners() {
             sleep 1
             raida="raida$fixed_server"
             an="${array_an[$fixed_server]}"
-            raida_url="https://$raida.cloudcoin.global/service/fix"
+            raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/fix"
             raida_url="$raida_url?fromserver1=${fromserver[1]}&message1=${message[1]}&fromserver2=${fromserver[2]}&message2=${message[2]}&fromserver3=${fromserver[3]}&message3=${message[3]}&pan=$an"
             start_s=$(Timer)
             http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
@@ -1503,7 +1514,7 @@ _multi_detect() {
     [ $is_testcoin -eq 1 ] && return 1 # testcoin file not found or with wrong format
 
     raida="raida$input"
-    raida_url="https://$raida.cloudcoin.global/service/multi_detect"
+    raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/multi_detect"
     nn=$($JQ_CMD -r '.cloudcoin[].nn' $coinfile)
     sn=$($JQ_CMD -r '.cloudcoin[].sn' $coinfile)
     an=$($JQ_CMD -r ".cloudcoin[].an[$input]" $coinfile)
@@ -1732,7 +1743,7 @@ _post_multi_detect() {
     post_nums=$3
 
     raida="raida$node"
-    raida_url="https://$raida.cloudcoin.global/service/multi_detect"
+    raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/multi_detect"
     detect_retval=0
     start_s=$(Timer)
     http_response=$($CURL_CMD $CURL_OPT_multi -d "$post_data" $raida_url 2>&1)
@@ -1799,7 +1810,7 @@ _post_multi_detect_b() {
     post_nums=$3
 
     raida="raida$node"
-    raida_url="https://$raida.cloudcoin.global/service/multi_detect"
+    raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/multi_detect"
     detect_retval=0
     start_s=$(Timer)
     post_data="b=t&$post_data"
@@ -1921,7 +1932,7 @@ _multi_get_ticket() {
     [ $is_testcoin -eq 1 ] && return 1 # testcoin file not found or with wrong format
 
     raida="raida$node_num"
-    raida_url="https://$raida.cloudcoin.global/service/multi_get_ticket"
+    raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/multi_get_ticket"
     nn=$($JQ_CMD -r '.cloudcoin[].nn' $coinfile)
     sn=$($JQ_CMD -r '.cloudcoin[].sn' $coinfile)
     an=$($JQ_CMD -r ".cloudcoin[].an[$node_num]" $coinfile)
@@ -2056,7 +2067,7 @@ _multi_hints() {
 
     input="$1"
     raida="raida$input"
-    raida_url="https://$raida.cloudcoin.global/service/multi_hints"
+    raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/multi_hints"
 
     # _multi_get_ticket will return $multi_tickets_response
     #
@@ -2254,7 +2265,7 @@ _multi_fix() {
             #echo "post_data = $post_data"
 
             raida="raida$fixed_server"
-            raida_url="https://$raida.cloudcoin.global/service/multi_fix"
+            raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/multi_fix"
             multi_fix_retval=0
             start_s=$(Timer)
             http_response=$($CURL_CMD $CURL_OPT_multi -d "$post_data" $raida_url 2>&1)
@@ -2307,7 +2318,7 @@ Hints_ticket_request() {
 
     input="$1"
     raida="raida$input"
-    raida_url="https://$raida.cloudcoin.global/service/get_ticket"
+    raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/get_ticket"
     nn=$($JQ_CMD '.cloudcoin[].nn' $TESTCOINFILE1 | tr -d '"')
     sn=$($JQ_CMD '.cloudcoin[].sn' $TESTCOINFILE1 | tr -d '"')
     string_an=$($JQ_CMD -r '.cloudcoin[].an[]' $TESTCOINFILE1)
@@ -2358,7 +2369,7 @@ Fix_ticket_request() {
     toserver="$4"
     an="$5"
     denom="$6"
-    raida_url="https://$raida.cloudcoin.global/service/get_ticket"
+    raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/get_ticket"
     raida_url="$raida_url?nn=$nn&sn=$sn&an=$an&pan=$an&denomination=$denom"
 
     http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
@@ -2406,7 +2417,7 @@ _SW_Show() {
     [ $is_testcoin -eq 1 ] && return 1 # testcoin file not found or with wrong format
 
     raida="raida$node_num"
-    raida_url="https://$raida.cloudcoin.global/service/show"
+    raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/show"
     nn=$($JQ_CMD '.cloudcoin[].nn' $coinfile | tr -d '"')
     sn=$($JQ_CMD '.cloudcoin[].sn' $coinfile | tr -d '"')
     string_an=$($JQ_CMD -r '.cloudcoin[].an[]' $coinfile)
@@ -2483,7 +2494,7 @@ _SW_Send() {
     done
 
     raida="raida$node_num"
-    raida_url="https://$raida.cloudcoin.global/service/send"
+    raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/send"
     nn=$($JQ_CMD -r '.cloudcoin[].nn' $bank_coinfile)
     sn=$($JQ_CMD -r '.cloudcoin[].sn' $bank_coinfile)
     an=$($JQ_CMD -r ".cloudcoin[].an[$node_num]" $bank_coinfile)
@@ -2630,7 +2641,7 @@ _SW_Receive() {
     }
 
     raida="raida$node_num"
-    raida_url="https://$raida.cloudcoin.global/service/receive"
+    raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/receive"
     nn=$($JQ_CMD '.cloudcoin[].nn' $id_coinfile | tr -d '"')
     sn=$($JQ_CMD '.cloudcoin[].sn' $id_coinfile | tr -d '"')
     string_an=$($JQ_CMD -r '.cloudcoin[].an[]' $id_coinfile)
@@ -2736,7 +2747,7 @@ _SW_GetTag() {
     coinfile="$2"
 
     raida="raida$node_num"
-    raida_url="https://$raida.cloudcoin.global/service/show"
+    raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/show"
     nn=$($JQ_CMD '.cloudcoin[].nn' $coinfile | tr -d '"')
     sn=$($JQ_CMD '.cloudcoin[].sn' $coinfile | tr -d '"')
     string_an=$($JQ_CMD -r '.cloudcoin[].an[]' $coinfile)
@@ -2793,7 +2804,7 @@ _SW_RenameTag() {
     [ $is_testcoin -eq 1 ] && return 1 # testcoin file not found or with wrong format
 
     raida="raida$node_num"
-    raida_url="https://$raida.cloudcoin.global/service/rename_tag"
+    raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/rename_tag"
     nn=$($JQ_CMD '.cloudcoin[].nn' $coinfile | tr -d '"')
     sn=$($JQ_CMD '.cloudcoin[].sn' $coinfile | tr -d '"')
     string_an=$($JQ_CMD -r '.cloudcoin[].an[]' $coinfile)
@@ -2880,7 +2891,7 @@ _SW_Transfer() {
     done
 
     raida="raida$node_num"
-    raida_url="https://$raida.cloudcoin.global/service/transfer"
+    raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/transfer"
     sn=$($JQ_CMD '.cloudcoin[].sn' $from_id_coinfile | tr -d '"')
     string_an=$($JQ_CMD -r '.cloudcoin[].an[]' $from_id_coinfile)
     array_an=($string_an)
@@ -3316,7 +3327,7 @@ Get_version() {
     local version
     node=$1
     raida="raida$node"
-    raida_url="https://$raida.cloudcoin.global/service/version"
+    raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/version"
     http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
     http_retval=$?
 
