@@ -13,7 +13,7 @@
 #
 
 # Variables
-VERSION="200830"
+VERSION="200901"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -2675,7 +2675,7 @@ _SW_Receive() {
             ((index++))
         done
 
-        post_data="sn=$sn&an=$an&pan=$an&denomination=$denom&$post_sns"
+        post_data="nn=$nn&sn=$sn&an=$an&pan=$an&denomination=$denom&$post_sns"
         #echo $post_data
 
         start_s=$(Timer)
