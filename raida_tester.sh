@@ -13,7 +13,7 @@
 #
 
 # Variables
-VERSION="200901"
+VERSION="200912"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -98,7 +98,7 @@ Show_head() {
 # You have to have several authentic CloudCoin .stack files called          #
 # 'testcoin*.stack' in the same folder as this program to run tests.        #
 #############################################################################
-[Version: ${VERSION}]|[Debug: $([ $DEBUG -eq 1 ] && echo "ON" || echo "OFF")]|[Protocol: $(ToUpper $HTTP_PROTO)]
+[Version: ${VERSION}]$(Check_Update)|[Debug: $([ $DEBUG -eq 1 ] && echo "ON" || echo "OFF")]|[Protocol: $(ToUpper $HTTP_PROTO)]
 EOF
 }
 
@@ -3384,6 +3384,7 @@ Check_Update() {
 
     git_ver="$(echo $found | cut -d = -f2 | sed 's/\"//g')"
     if [[ -n $git_ver && "$git_ver" != "$VERSION" ]]; then
+        blink "green" "New Release $git_ver!"
         if [[ -n $notifier ]]; then
             notify-send -u normal "Raida_tester Update!" "New version of Raida_tester available\!\nCurrent version: ${VERSION}\n\New version: ${git_ver}\nDownload at github.com/a-lang/RAIDA_Tester" \
                 -i face-glasses -t 10000
@@ -3391,6 +3392,28 @@ Check_Update() {
         fi
     fi
     return 1
+}
+
+blink() {
+    mode=$1
+    string="$2"
+    case "$mode" in
+    red)
+        echo -e "\033[39;31;2:39;5m${string}\033[0m"
+        ;;
+    white)
+        echo -e "\033[0;97;2:31;5m${string}\033[0m"
+        ;;
+    green)
+        echo -e "\033[39;32;2:39;5m${string}\033[0m"
+        ;;
+    black_yellow)
+        echo -e "\033[33;5;7m${string}\033[0m"
+        ;;
+    *)
+        echo $string
+        ;;
+    esac
 }
 
 cd $WORKDIR
@@ -3406,7 +3429,7 @@ fi
 if Check_CMD $NOTIFY_CMD; then notifier=1; else unset notifier; fi
 
 Show_head
-Check_Update
+#Check_Update
 Main
 
 exit
