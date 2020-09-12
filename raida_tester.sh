@@ -13,7 +13,7 @@
 #
 
 # Variables
-VERSION="200912"
+VERSION="200912.1"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -146,9 +146,12 @@ The following packages must be already installed on the system.
  * python
  * bc
 Recommend: To install these packages, you can run the commands:
- #> yum install curl jq bind-utils python bc
- or
- #> sudo apt-get update; sudo apt-get install curl jq dnsutils python bc
+ * For RedHat/CentOS
+   $> yum install curl jq bind-utils python bc
+ * For Debian/Ubuntu
+   $> sudo apt-get update; sudo apt-get install curl jq dnsutils python bc
+ * For macOS
+   $> brew install curl jqc
 
 :Install and Upgrade
  $> git clone https://github.com/a-lang/RAIDA_Tester.git
@@ -202,10 +205,13 @@ NOTE: The following packages must be already installed on the system.
  * bc
 
 Recommend: To install these packages, you can run the commands:
- yum install curl jq bind-utils python bc
- or
- sudo apt-get update; sudo apt-get install curl jq dnsutils python bc
-  
+ * For RedHat/CentOS
+   $> yum install curl jq bind-utils python bc
+ * For Debian/Ubuntu
+   $> sudo apt-get update; sudo apt-get install curl jq dnsutils python bc
+ * For macOS
+   $> brew install curl jq
+
 EOF
 }
 
