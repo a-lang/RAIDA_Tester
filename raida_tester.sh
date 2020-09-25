@@ -13,7 +13,7 @@
 #
 
 # Variables
-VERSION="200917"
+VERSION="200925"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -2143,7 +2143,6 @@ _multi_fix() {
         if [ $input -gt 0 -a $input -lt 5 ]; then
             array_name="array_fix_corner$input"
             array_trusted_servers=$(eval echo \${$array_name[@]})
-            n=1
             post_messages=""
             post_nns=""
             post_pans=""
@@ -2161,6 +2160,7 @@ _multi_fix() {
                 ((index++))
             done
 
+            n=1
             for i in ${array_trusted_servers[@]}; do
                 _multi_get_ticket "$i" "$coinfile"
                 run_multi_get_ticket=$?
@@ -2560,7 +2560,7 @@ _SW_Send() {
 }
 
 _SW_Receive() {
-    local node_num id_coinfile bank_coinfile
+    local node_num id_coinfile bank_coinfile notpass
     local s i
     node_num=$1
     id_coinfile="$2"
@@ -2630,30 +2630,35 @@ _SW_Receive() {
         fi
 
         if [ $http_retval -eq 0 ]; then
-            http_sn=$(echo $http_response | $JQ_CMD -r '.[].sn')
-            http_status=$(echo $http_response | $JQ_CMD -r '.[].status')
-            http_msg=$(echo $http_response | $JQ_CMD -r '.[].message')
+            http_status=$(echo $http_response | $JQ_CMD -r '.[].status' 2>/dev/null)
 
-            http_array_sn=($http_sn)
-            http_array_status=($http_status)
-            http_array_msg=($http_msg)
-            ## for debugging only
-            #echo "http_array_sn = ${http_array_sn[@]}"
-            #echo "http_array_status = ${http_array_status[@]}"
-            #echo "http_array_msg = ${http_array_msg[@]}"
-
-            status_color=""
             notpass=0
-            for ((i = 0; i < ${#http_array_sn[@]}; i++)); do
-                if [ "${http_array_status[$i]}" == "pass" ]; then
-                    new_an=${http_array_msg[$i]}
-                    $JQ_CMD ".cloudcoin[$i].an[$node_num] = \"$new_an\"" $bank_coinfile >$bank_coinfile.tmp && mv $bank_coinfile.tmp $bank_coinfile
-                    status_color+="$_GREEN_${http_array_sn[$i]}->${http_array_status[$i]}$_REST_ "
-                else
-                    notpass=1
-                    status_color+="$_RED_${http_array_sn[$i]}->${http_array_status[$i]}$_REST_ "
-                fi
-            done
+            if [ -n "$http_status" ]; then
+                http_msg=$(echo $http_response | $JQ_CMD -r '.[].message')
+                http_sn=$(echo $http_response | $JQ_CMD -r '.[].sn')
+                http_array_sn=($http_sn)
+                http_array_status=($http_status)
+                http_array_msg=($http_msg)
+                ## for debugging only
+                #echo "http_array_sn = ${http_array_sn[@]}"
+                #echo "http_array_status = ${http_array_status[@]}"
+                #echo "http_array_msg = ${http_array_msg[@]}"
+
+                status_color=""
+                for ((i = 0; i < ${#http_array_sn[@]}; i++)); do
+                    if [ "${http_array_status[$i]}" == "pass" ]; then
+                        new_an=${http_array_msg[$i]}
+                        $JQ_CMD ".cloudcoin[$i].an[$node_num] = \"$new_an\"" $bank_coinfile >$bank_coinfile.tmp && mv $bank_coinfile.tmp $bank_coinfile
+                        status_color+="$_GREEN_${http_array_sn[$i]}->${http_array_status[$i]}$_REST_ "
+                    else
+                        notpass=1
+                        status_color+="$_RED_${http_array_sn[$i]}->${http_array_status[$i]}$_REST_ "
+                    fi
+                done
+            else
+                status="No coins in transfer pool!"
+                status_color="$_GREEN_$status$_REST_"
+            fi
 
             if [ $notpass -eq 1 ]; then
                 response_color="$_RED_$http_response$_REST_"
