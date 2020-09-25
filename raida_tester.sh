@@ -13,7 +13,7 @@
 #
 
 # Variables
-VERSION="200925"
+VERSION="200925.1"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -125,15 +125,20 @@ EOF
 
 }
 
+Show_help_head() {
+    local width
+    width=62
+    printf "%-${width}.${width}s\n" "#####################################################################"
+    printf "%-3s %-54.54s %3s\n" "###" "    " "###"
+    printf "%-20s %-37s %3s\n" "###" "RAIDA Tester Help" "###"
+    printf "%-20s %-37s %3s\n" "###" "Version: ${VERSION}" "###"
+    printf "%-20s %-37s %3s\n" "###" "<Enter q to exit>" "###"
+    printf "%-${width}.${width}s\n" "#####################################################################"
+}
+
 Show_help() {
     less <<EOF
-##############################################################
-###                                                        ###
-###                  RAIDA Tester Help                     ###
-###                  Version: $VERSION                     ###
-###                  <Enter q to exit>                     ###
-##############################################################
-
+$(Show_help_head)
 :Introduction
 This program is designed to test if the RAIDA node works with 
 all functions such as echo, detect etc.
