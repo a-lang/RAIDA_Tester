@@ -12,8 +12,12 @@
 #   More logs are at Github website.
 #
 
+#
+#set -x
+set -e
+
 # Variables
-VERSION="200925.1"
+VERSION="201001"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -1270,7 +1274,8 @@ _fix() {
             elif [ $j -gt 24 ]; then
                 eval $array_name[$n]=$(($j - 25))
             fi
-            ((n++))
+            #((n++))
+            n=$((n + 1))
         done
     done
 
@@ -1298,7 +1303,8 @@ _fix() {
                     Fix_ticket_retval=1
                 fi
 
-                ((n++))
+                #((n++))
+                n=$((n + 1))
             done
 
             if [ $Fix_ticket_retval -eq 0 ]; then
@@ -1398,7 +1404,8 @@ _fix_all_corners() {
             elif [ $j -gt 24 ]; then
                 eval $array_name[$n]=$(($j - 25))
             fi
-            ((n++))
+            #((n++))
+            n=$((n + 1))
         done
     done
 
@@ -1423,7 +1430,8 @@ _fix_all_corners() {
                 break
             fi
 
-            ((n++))
+            #((n++))
+            n=$((n + 1))
         done
 
         http_response=""
@@ -1559,7 +1567,8 @@ _multi_detect() {
         else
             post_nns="$post_nns&nns[]=$n"
         fi
-        ((index++))
+        #((index++))
+        index=$((index + 1))
     done
 
     index=0
@@ -1569,7 +1578,8 @@ _multi_detect() {
         else
             post_sns="$post_sns&sns[]=$s"
         fi
-        ((index++))
+        #((index++))
+        index=$((index + 1))
     done
 
     index=0
@@ -1581,7 +1591,8 @@ _multi_detect() {
             post_ans="$post_ans&ans[]=$a"
             post_pans="$post_pans&pans[]=$a"
         fi
-        ((index++))
+        #((index++))
+        index=$((index + 1))
     done
 
     index=0
@@ -1591,7 +1602,8 @@ _multi_detect() {
         else
             post_denoms="$post_denoms&dn[]=$d"
         fi
-        ((index++))
+        #((index++))
+        index=$((index + 1))
     done
 
     post_data="$post_nns&$post_sns&$post_ans&$post_pans&$post_denoms"
@@ -1700,7 +1712,8 @@ _multi_detect2() {
                             post_pans="$post_pans&pans[]=${array_an[$n]}"
                             post_denoms="$post_denoms&dn[]=${array_denom[$n]}"
                         fi
-                        ((n++))
+                        #((n++))
+                        n=$((n + 1))
                     done
                     #echo "-> $post_sns"
                     #echo "-> $post_nns"
@@ -1725,7 +1738,8 @@ _multi_detect2() {
                             post_pans="$post_pans&pans[]=${array_an[$n]}"
                             post_denoms="$post_denoms&dn[]=${array_denom[$n]}"
                         fi
-                        ((n++))
+                        #((n++))
+                        n=$((n + 1))
                     done
                     #echo "last-> $post_sns"
                     #echo "last-> $post_nns"
@@ -1794,8 +1808,10 @@ _post_multi_detect() {
                 total_count=${#array_msg[@]}
                 if [ $total_count -eq $post_nums ]; then
                     for s in "${array_msg[@]}"; do
-                        [ "$s" == "pass" ] && ((pass_count++))
-                        [ "$s" == "fail" ] && ((fail_count++))
+                        #[ "$s" == "pass" ] && ((pass_count++))
+                        #[ "$s" == "fail" ] && ((fail_count++))
+                        [ "$s" == "pass" ] && pass_count=$((pass_count + 1))
+                        [ "$s" == "fail" ] && fail_coun=$((fail_count + 1))
                     done
                 else
                     detect_retval=1
@@ -1909,7 +1925,8 @@ _multi_get_ticket() {
         else
             post_nns="$post_nns&nns[]=$n"
         fi
-        ((index++))
+        #((index++))
+        index=$((index + 1))
     done
 
     index=0
@@ -1919,7 +1936,8 @@ _multi_get_ticket() {
         else
             post_sns="$post_sns&sns[]=$s"
         fi
-        ((index++))
+        #((index++))
+        index=$((index + 1))
     done
 
     index=0
@@ -1931,7 +1949,8 @@ _multi_get_ticket() {
             post_ans="$post_ans&ans[]=$a"
             post_pans="$post_pans&pans[]=$a"
         fi
-        ((index++))
+        #((index++))
+        index=$((index + 1))
     done
 
     index=0
@@ -1941,7 +1960,8 @@ _multi_get_ticket() {
         else
             post_denoms="$post_denoms&denomination[]=$d"
         fi
-        ((index++))
+        #((index++))
+        index=$((index + 1))
     done
 
     post_data="$post_nns&$post_sns&$post_ans&$post_pans&$post_denoms"
@@ -2033,7 +2053,8 @@ _multi_hints() {
         else
             post_rns="$post_rns&rns[]=$i"
         fi
-        ((index++))
+        #((index++))
+        index=$((index + 1))
     done
 
     post_data="$post_rns"
@@ -2137,7 +2158,8 @@ _multi_fix() {
             elif [ $j -gt 24 ]; then
                 eval $array_name[$n]=$(($j - 25))
             fi
-            ((n++))
+            #((n++))
+            n=$((n + 1))
         done
     done
 
@@ -2162,7 +2184,8 @@ _multi_fix() {
                 else
                     post_pans="$post_pans&pans[]=$a"
                 fi
-                ((index++))
+                #((index++))
+                index=$((index + 1))
             done
 
             n=1
@@ -2187,7 +2210,8 @@ _multi_fix() {
                         post_messages="${post_messages}&message${n}[]=${d}"
                     fi
 
-                    ((notes++))
+                    #((notes++))
+                    notes=$((notes + 1))
                 done
 
                 if [ $n -eq 1 ]; then
@@ -2195,8 +2219,8 @@ _multi_fix() {
                 else
                     post_fromservers="$post_fromservers&fromserver$n=$i"
                 fi
-
-                ((n++))
+                #((n++))
+                n=$((n + 1))
             done
 
             post_data="$post_fromservers&$post_messages&$post_pans"
@@ -2470,7 +2494,8 @@ _SW_Send() {
             else
                 post_sns="$post_sns&sns[]=$s2"
             fi
-            ((index++))
+            #((index++))
+            index=$((index + 1))
         done
 
         index=0
@@ -2483,7 +2508,8 @@ _SW_Send() {
                 post_ans="$post_ans&ans[]=$a"
                 post_pans="$post_pans&pans[]=$a"
             fi
-            ((index++))
+            #((index++))
+            index=$((index + 1))
         done
 
         index=0
@@ -2494,7 +2520,8 @@ _SW_Send() {
             else
                 post_denoms="$post_denoms&denomination[]=$d"
             fi
-            ((index++))
+            #((index++))
+            index=$((index + 1))
         done
 
         to_sn=$($JQ_CMD -r '.cloudcoin[].sn' $id_coinfile)
@@ -2615,7 +2642,8 @@ _SW_Receive() {
             else
                 post_sns="$post_sns&sns[]=$s"
             fi
-            ((index++))
+            #((index++))
+            index=$((index + 1))
         done
 
         post_data="nn=$nn&sn=$sn&an=$an&pan=$an&denomination=$denom&$post_sns"
@@ -2872,7 +2900,8 @@ _SW_Transfer() {
             else
                 post_sns="$post_sns&sns[]=$s"
             fi
-            ((index++))
+            #((index++))
+            index=$((index + 1))
         done
 
         post_tag="TransferTo$to_sn"
@@ -2970,20 +2999,25 @@ List_denoms() {
     denoms_250=0
     for k in "${array_sn[@]}"; do
         case "$(Get_denom $k)" in
-        1)
-            ((denoms_1++))
+        "1")
+            #((denoms_1++))
+            denoms_1=$((denoms_1 + 1))
             ;;
-        5)
-            ((denoms_5++))
+        "5")
+            #((denoms_5++))
+            denoms_5=$((denoms_5 + 1))
             ;;
-        25)
-            ((denoms_25++))
+        "25")
+            #((denoms_25++))
+            denoms_25=$((denoms_25 + 1))
             ;;
-        100)
-            ((denoms_100++))
+        "100")
+            #((denoms_100++))
+            denoms_100=$((denoms_100 + 1))
             ;;
-        250)
-            ((denoms_250++))
+        "250")
+            #((denoms_250++))
+            denoms_250=$((denoms_250 + 1))
             ;;
         esac
     done
