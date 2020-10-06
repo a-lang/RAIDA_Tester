@@ -14,10 +14,10 @@
 
 #
 #set -x
-set -e
+#set -e
 
 # Variables
-VERSION="201001"
+VERSION="201006"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -48,8 +48,8 @@ _GREEN_='\033[32m'
 _RED_='\033[31m'
 _BOLD_='\033[1m'
 CURL_CMD="curl"
-CURL_OPT="$CURL_EXTRA_OPT -qSfs -m 60"
-CURL_OPT_multi="$CURL_EXTRA_OPT -qSfs -m 60 -X POST"
+CURL_OPT="$CURL_EXTRA_OPT -qSfs -m 30"
+CURL_OPT_multi="$CURL_EXTRA_OPT -qSfs -m 30 -X POST"
 JQ_CMD="jq"
 GETIP_CMD="dig"
 PYTHON_CMD="python"
