@@ -17,7 +17,7 @@
 #set -e
 
 # Variables
-VERSION="201006"
+VERSION="201016"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -114,7 +114,6 @@ RAIDA Tester Commands Available:
 [-] detect            (d)
 [-] get_ticket        (g)
 [-] hints             (h)
-[-] fix               (f)
 [-] multi_detect      (md)
 [-] multi_detect+     (md2)
 [-] multi_get_ticket  (mg)
@@ -177,7 +176,7 @@ list.
 File                    Function      Notes
 Name                    Keys          (Coins)
 ===============================================
-testcoin.stack          d/g/h/f       1
+testcoin.stack          d/g/h         1
 testcoin_multi.stack    md/mg/mh/mf   3-200
 testcoin_multi2.stack   md2           800+
 testcoin_id1_x1.stack   sw            1
@@ -244,9 +243,10 @@ Main() {
         h | hints)
             Process_request _hints
             ;;
-        f | fix)
-            Process_request _fix
-            ;;
+        #f | fix)
+        #    isFix4Mode="true"
+        #    Process_request _fix
+        #    ;;
         md | multi_detect)
             Process_request _multi_detect
             ;;
@@ -329,7 +329,7 @@ Advanced() {
     prompt="ADVANCED(a)"
     while true; do
         echo "Test All RAIDA Nodes [1-7]: 1.Echo 2.Echo2 3.Detect 4.Ticket 5.Hints q.Exit"
-        echo "                            6.Fix 7.Multi_Detect 8.Multi_Ticket"
+        echo "                            6.Multi_Detect 7.Multi_Ticket"
         echo "NOTE: This process may take a few mins to check all nodes please be patient until all checks done."
         echo -n "$prompt> " && read input
         if [ $input -ge 1 -a $input -le 8 ] 2>/dev/null; then
@@ -349,13 +349,13 @@ Advanced() {
             5)
                 _all_hints
                 ;;
+            #6)
+            #    _all_fix
+            #    ;;
             6)
-                _all_fix
-                ;;
-            7)
                 _all_multi_detect
                 ;;
-            8)
+            7)
                 _all_multi_get_ticket
                 ;;
             esac
@@ -712,6 +712,11 @@ Process_request() {
         ;;
     _fix)
         prompt="FIX(f)"
+        if [ "$isFix4Mode" = "true" ]; then
+            prompt="FIX4(f)"
+        else
+            prompt="FIX3(f)"
+        fi
         ;;
     _multi_detect)
         prompt="MULTI_DETECT(md)"
@@ -1265,6 +1270,13 @@ _fix() {
     array_fix_corner4[2]=$((fixed_server + 5))
     array_fix_corner4[3]=$((fixed_server + 6))
 
+    if [ "$isFix4Mode" = "true" ]; then
+        array_fix_corner1[4]=$((fixed_server + 6))
+        array_fix_corner2[4]=$((fixed_server + 4))
+        array_fix_corner3[4]=$((fixed_server - 4))
+        array_fix_corner4[4]=$((fixed_server - 6))
+    fi
+
     for ((i = 1; i <= 4; i++)); do
         array_name="array_fix_corner$i"
         n=1
@@ -1311,7 +1323,11 @@ _fix() {
                 raida="raida$fixed_server"
                 an="${array_an[$fixed_server]}"
                 raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/fix"
-                raida_url="$raida_url?fromserver1=${fromserver[1]}&message1=${message[1]}&fromserver2=${fromserver[2]}&message2=${message[2]}&fromserver3=${fromserver[3]}&message3=${message[3]}&pan=$an"
+                if [ "$isFix4Mode" = "true" ]; then
+                    raida_url="$raida_url?fromserver1=${fromserver[1]}&message1=${message[1]}&fromserver2=${fromserver[2]}&message2=${message[2]}&fromserver3=${fromserver[3]}&message3=${message[3]}&fromserver4=${fromserver[4]}&message4=${message[4]}&pan=$an"
+                else
+                    raida_url="$raida_url?fromserver1=${fromserver[1]}&message1=${message[1]}&fromserver2=${fromserver[2]}&message2=${message[2]}&fromserver3=${fromserver[3]}&message3=${message[3]}&pan=$an"
+                fi
                 start_s=$(Timer)
                 http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
                 http_retval=$?
