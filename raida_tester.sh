@@ -17,7 +17,7 @@
 #set -e
 
 # Variables
-VERSION="201016"
+VERSION="201121"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -111,6 +111,7 @@ Show_menu() {
 ===================================
 RAIDA Tester Commands Available:
 [-] echo              (e)
+[-] version           (v)
 [-] detect            (d)
 [-] get_ticket        (g)
 [-] hints             (h)
@@ -234,6 +235,9 @@ Main() {
         e | echo)
             Process_request _echo
             ;;
+        v | version)
+            Process_request _version
+            ;;
         d | detect)
             Process_request _detect
             ;;
@@ -328,8 +332,8 @@ Advanced() {
     input=""
     prompt="ADVANCED(a)"
     while true; do
-        echo "Test All RAIDA Nodes [1-7]: 1.Echo 2.Echo2 3.Detect 4.Ticket 5.Hints q.Exit"
-        echo "                            6.Multi_Detect 7.Multi_Ticket"
+        echo "Test All RAIDA Nodes [1-8]: 1.Echo 2.Echo2 3.Detect 4.Ticket 5.Hints q.Exit"
+        echo "                            6.Multi_Detect 7.Multi_Ticket 8.Version"
         echo "NOTE: This process may take a few mins to check all nodes please be patient until all checks done."
         echo -n "$prompt> " && read input
         if [ $input -ge 1 -a $input -le 8 ] 2>/dev/null; then
@@ -357,6 +361,9 @@ Advanced() {
                 ;;
             7)
                 _all_multi_get_ticket
+                ;;
+            8)
+                _all_version
                 ;;
             esac
 
@@ -701,6 +708,9 @@ Process_request() {
     _echo)
         prompt="ECHO(e)"
         ;;
+    _version)
+        prompt="VERSION(v)"
+        ;;
     _detect)
         prompt="DETECT(d)"
         ;;
@@ -763,7 +773,7 @@ _all_echo() {
 
         version=$(Get_version $n)
         #Output $n "v$version|time:$echo_datetime|$result" $echo_elapsed
-        Output $n "v$version|time:$echo_datetime|status:$result|$echo_msg"
+        Output $n "v$version|time:$echo_datetime|status:$result|$(printf '%-6s' $echo_msg)"
 
         if [ "$result" != "PASS" ]; then
             Output2 "$echo_response"
@@ -869,6 +879,87 @@ _echo() {
     return $echo_retval
 }
 
+_version() {
+    version_response=""
+    version_elapsed=0
+    version_datetime=""
+    version_ver=""
+    version_eng=""
+
+    version_retval=0
+    input="$1"
+    raida="raida$input"
+    raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/version"
+    start_s=$(Timer)
+    http_response=$($CURL_CMD $CURL_OPT $raida_url 2>&1)
+    http_retval=$?
+    end_s=$(Timer)
+    elapsed=$(((end_s - start_s) / 1000000))
+
+    if [ $http_retval -eq 0 ]; then
+        datetime=$(echo $http_response | $JQ_CMD -r '.time' 2>/dev/null)
+        status=$(echo $http_response | $JQ_CMD -r '.status' 2>/dev/null)
+        ver=$(echo $http_response | $JQ_CMD -r '.version' 2>/dev/null)
+        eng=$(echo $http_response | $JQ_CMD -r '.engine' 2>/dev/null)
+        [ -z $status ] && status="invalid json data"
+    else
+        status="error"
+        version_retval=1
+    fi
+
+    if [ "$status" = "pass" ]; then
+        status_color="$_GREEN_$status$_REST_"
+        response_color="$_GREEN_$http_response$_REST_"
+    else
+        status_color="$_RED_$status$_REST_"
+        response_color="$_RED_$http_response$_REST_"
+        version_retval=1
+    fi
+
+    echo
+    echo -e "Status: $_BOLD_$status_color"
+    echo "Milliseconds: $elapsed"
+    echo "Request: $raida_url"
+    echo -e "Response: $response_color"
+    echo
+
+    version_response=$http_response
+    version_elapsed=$elapsed
+    version_datetime=$datetime
+    version_ver=$ver
+    version_eng=$eng
+    return $version_retval
+}
+
+_all_version() {
+    local n
+    local version
+
+    #ask_html "ECHO"
+    #retval=$?
+    #[ $retval -eq 1 ] && return 1 # html template file not found
+
+    echo "VERSION Results: "
+    for ((n = 0; n < $RAIDA_NUMS; n++)); do
+        _version $n >/dev/null 2>&1
+        run_version=$?
+        if [ $run_version -eq 0 ]; then
+            result="PASS"
+        else
+            result="${_RED_}FAIL${_REST_}"
+        fi
+
+        version=$version_ver
+        Output $n "version:$version|engine:$(printf '%-6s' $version_eng)|time:$version_datetime|status:$result"
+
+        if [ "$result" != "PASS" ]; then
+            Output2 "$version_response"
+        fi
+    done
+    echo
+    echo
+}
+
 _all_detect() {
     local n
 
@@ -891,7 +982,7 @@ _all_detect() {
             result="${_RED_}FAIL${_REST_}"
         fi
 
-        Output $n "$result" $detect_elapsed
+        Output $n "status:$result|latency(ms):$(printf '%-4s' $detect_elapsed)"
 
         if [ "$result" != "PASS" ]; then
             Output2 "$detect_response"
@@ -1001,7 +1092,7 @@ _all_ticket() {
         fi
 
         #printf " %.18s [%4b] (%4ims) \n" "RAIDA($n).............." "$result" $ticket_elapsed
-        Output $n "$result" $ticket_elapsed
+        Output $n "status:$result|latency(ms):$(printf '%-4s' $ticket_elapsed)"
 
         if [ "$result" != "PASS" ]; then
             #printf "  %-20b \n" "--> ${_RED_}$ticket_response${_REST_}"
@@ -1119,25 +1210,11 @@ _all_hints() {
 
         fi
 
-        #printf " %.18s [%4b] (%4ims) %-12s \n" "RAIDA($n).............." "$result" $hints_elapsed "$hints_response"
-        Output $n "$result" $hints_elapsed
+        Output $n "status:$result|latency(ms):$(printf '%-4s' $hints_elapsed)"
 
         if [ "$result" != "PASS" ]; then
-            #printf "  %-20b \n" "--> ${_RED_}$hints_response${_REST_}"
             Output2 "$hints_response"
         fi
-
-        #if [ "$save_to_html" == "YES" ];then
-        #    html_report="hintstest.html"
-        #    raida_node=$n
-        #    get_status="$status"
-        #    get_request="$raida_url"
-        #    get_response="$http_response"
-        #    get_ms="$elapsed"
-
-        #    Basic_htmlreport "$html_report" "$raida_node" "$get_status" "$get_request" "$get_response" "$get_ms"
-        #fi
-
     done
     echo
     echo
@@ -1516,7 +1593,7 @@ _all_multi_detect() {
             result="${_RED_}FAIL${_REST_}"
         fi
 
-        Output $n "$result" $multi_detect_elapsed
+        Output $n "status:$result|latency(ms):$(printf '%-4s' $multi_detect_elapsed)"
 
         if [ "$result" != "PASS" ]; then
             Output2 "$mult_detect_response"
@@ -1872,7 +1949,7 @@ _all_multi_get_ticket() {
             result="${_RED_}FAIL${_REST_}"
         fi
 
-        Output $n "$result" $multi_tickets_elapsed
+        Output $n "status:$result|latency(ms):$(printf '%-4s' $multi_tickets_elapsed)"
 
         if [ "$result" != "PASS" ]; then
             Output2 "$multi_tickets_response"
