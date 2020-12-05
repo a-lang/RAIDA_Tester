@@ -17,7 +17,7 @@
 #set -e
 
 # Variables
-VERSION="201121"
+VERSION="201205"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -81,6 +81,51 @@ ERROR_07="Error: Test failed, run the get_ticket to see more details."
 
 Show_logo() {
     printf '
+MMMMMMMMMMMMMMMMMMMMNmmmmNNmNMMMMMMMMNNmmmNmmmNMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMNddmNMMmhs+/-.```````..-:/oydmNNmdNMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMNmmNMMdo:`          +ssso        `:ohNNmmNMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMNNmNMMh/`    -ohh      oMMMMo     +ds+-  -odNmmmNMMMMMMMMMMMMMMMMM
+MMMMMMMMNddMMNo.   `/hNMMMM/     `mMMMN.    `mMMMNh+. `+dNmmNMMMMMMMMMMMMMMM
+MMMMMMNmmMMN+`   -yNMMMMMMMm`     :++//.     -MMMMMMMmo- .oNmNMMMMMMMMMMMMMM
+MMMMMNmNMMs`   -hMMMMMMMMMMh.                 -/ymMMMMMMd/``+mNNMMMMMMMMMMMM
+MMMMmmMMN:   `sMMMMMMMMMm+`                       .odMMMMMN+` +NNdNMMMMMMMMM
+MMMmmMMm.   .dMMMMMMMMm/          ./osyyyys+:.       .sNMMMMN+ `sMmdMMMMMMMM
+MMmdMMm.   .mMMMMMMMMs`        :yNMMMMMMMMMMMMNh+.     `+NMMMMd- -mNdNMMMMMM
+MNhMMN-   `mMMMMMMMMo        /mMMMMMMMMMMMMMMMMMMMd/     `yMMMMMo `yMdNMMMMM
+MhNMMo    yMMMMMMMMs        yMMMMMMMMMMMMMMMMMMMMMMMm+.-://hMMMMMy` sMdNMMMM
+NdMMN`   -MMMMMMMMm`       yMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMh` oMdmMMM
+dNMMs    sMMMMMMMMo       :MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMh  sMdNMM
+dMMM/    hMMMMMMMM:       oMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMo  dMhNM
+yMMM:    dMMMMMMMM:       oMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMN- -NNhM
+dMMM:    hMMMMMMMM+       :MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMy  sMmN
+NMMM:    sMMMMMMMMh        dMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMNdhysoNMMMMN` .MNd
+dMMMo    :MMMMMMMMM-       .mMMMMMMMMMMMMMMMMMMMMMMMMMMMMm`     dMMMMM:  dMd
+hMMMd     dMMMMMMMMd`       .mMMMMMMMMMMMMMMMMMMMMMMMMMMMo      mMMMMM+  yMN
+mmMMM:    :MMMMMMMMMh`       `sMMMMMMMMMMMMMMMMMMMMMMMMMh      .NMMMMM+  oMh
+NdMMMd`    sMMMMMMMMMh`        -yMMMMMMMMMMMMMMMMMMMMMMs       sMMMMMM:  sMd
+MmmMMMo    `hMMMMMMMMMm-         .+dMMMMMMMMMMMMMMMMNy.       :MMMMMMN`  hMm
+MMhNMMM/    `hMMMMMMMMMMs`          `/shmMMMMMMMNds/`        :NMMMMMMs  `NMm
+MMNdNMMM/     sMMMMMMMMMMNo`             `.....`            +NMMMMMMm`  /MMd
+MMMmhMMMM+     /NMMMMMMMMMMNs-                            `dMMMMMMMN-  `mMmm
+MMMMMmNMMMs`    .yMMMMMMMMMMMMmo-                          yMMMMMMN:   yMMhN
+MMMMMMdNMMMd-     :dMMMMMMMMMMMMMNho:.            `.:`     `NMMMMm-   oMMdmM
+MMMMMMMmmMMMMs`     :hMMMMMMMMMMMMMMMMN+       :hmNMMo      /MMNo`   oMMmmMM
+MMMMMMMMNdNMMMN+`     .sNMMMMMMMMMMMMMMm`      `mMMMMN.      yy.   `yMMddMMM
+MMMMMMMMMMmdMMMMNo`      :smMMMMMMMMMMMM+       +MMMMMy           /mMMdmMMMM
+MMMMMMMMMMMMdmMMMMNy-       .+ymMMMMMMMMm       `mMMMMM-        :dMMNmMMMMMM
+MMMMMMMMMMMMMNmdNMMMMmo-        `:+shmNMM/       /mhs/-      `/dMMMmdMMMMMMM
+MMMMMMMMMMMMMMMMNmmNMMMMmy/`           ```                `/yNMMMmdMMMMMMMMM
+MMMMMMMMMMMMMMMMMMMNmNNMMMMMmy+:`                     ./sdMMMMMNNmMMMMMMMMMM
+MMMMMMMMMMMMMMMMMMMMMMNmdmNMMMMMMNdys+/:--...--:/+sydNMMMMMNNmNMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMMMMMMMMMMMNNmmmmNMMMMMMMMMMMMMMMMMMMMMMNNdmmNMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMNNmmmmNdNNmmmmmmMMNdNmmmNNMMMMMMMMMMMMMMMMMMMM
+
+'
+    read -n 1 -p "Press any key to continue or Ctrl+C to exit..."
+}
+
+Show_logo2() {
+    printf '
               ________                ________      _
              / ____/ /___  __  ______/ / ____/___  (_)___
             / /   / / __ \/ / / / __  / /   / __ \/ / __ \
@@ -92,8 +137,10 @@ Show_logo() {
 
 Show_head() {
     clear
-    Show_logo
+    #Show_logo
     cat <<EOF
+$(Show_logo2)
+
 #############################################################################
 # Welcome to RAIDA Tester. A CloudCoin Consortium Opensource.               #
 # The Software is provided as is, with all faults, defects and errors, and  #
@@ -3503,6 +3550,7 @@ fi
 
 if Check_CMD $NOTIFY_CMD; then notifier=1; else unset notifier; fi
 
+Show_logo
 Show_head
 #Check_Update
 Main
