@@ -17,7 +17,7 @@
 #set -e
 
 # Variables
-VERSION="201205"
+VERSION="201208"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -149,7 +149,7 @@ $(Show_logo2)
 # You have to have several authentic CloudCoin .stack files called          #
 # 'testcoin*.stack' in the same folder as this program to run tests.        #
 #############################################################################
-[Version: ${VERSION}]$(Check_Update)|[Debug: $([ $DEBUG -eq 1 ] && echo "ON" || echo "OFF")]|[Protocol: $(ToUpper $HTTP_PROTO)]
+[Version: ${VERSION}]$(Check_Update)|[Debug: $([ $DEBUG -eq 1 ] && echo "ON" || echo "OFF")]|[Protocol: $(ToUpper $HTTP_PROTO)]|[CCE: \$$(Get_Price)]
 EOF
 }
 
@@ -3516,6 +3516,21 @@ Check_Update() {
     return 1
 }
 
+Get_Price() {
+    local price
+    api_1="https://api.cryptonator.com/api/ticker/cce-usd"
+    api_2="https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=CCE&convert=USD&CMC_PRO_API_KEY=8ea005d0-1130-486f-83e4-27f939207f56"
+    http_response=$($CURL_CMD $CURL_OPT $api_1 2>/dev/null)
+    http_retval=$?
+    if [ $http_retval -eq 0 ]; then
+        price=$(echo $http_response | $JQ_CMD -r '.ticker.price' 2>/dev/null || echo "----")
+    else
+        price="----"
+    fi
+
+    echo "$price"
+}
+
 blink() {
     mode=$1
     string="$2"
@@ -3552,7 +3567,6 @@ if Check_CMD $NOTIFY_CMD; then notifier=1; else unset notifier; fi
 
 Show_logo
 Show_head
-#Check_Update
 Main
 
 exit
