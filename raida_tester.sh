@@ -17,7 +17,7 @@
 #set -e
 
 # Variables
-VERSION="201208"
+VERSION="210522"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -159,6 +159,7 @@ Show_menu() {
 RAIDA Tester Commands Available:
 [-] echo              (e)
 [-] version           (v)
+[-] CORS              (c)
 [-] detect            (d)
 [-] get_ticket        (g)
 [-] hints             (h)
@@ -285,6 +286,9 @@ Main() {
         v | version)
             Process_request _version
             ;;
+        c | cors)
+            Process_request _cors
+            ;;
         d | detect)
             Process_request _detect
             ;;
@@ -380,10 +384,10 @@ Advanced() {
     prompt="ADVANCED(a)"
     while true; do
         echo "Test All RAIDA Nodes [1-8]: 1.Echo 2.Echo2 3.Detect 4.Ticket 5.Hints q.Exit"
-        echo "                            6.Multi_Detect 7.Multi_Ticket 8.Version"
+        echo "                            6.Multi_Detect 7.Multi_Ticket 8.Version 9.CORS"
         echo "NOTE: This process may take a few mins to check all nodes please be patient until all checks done."
         echo -n "$prompt> " && read input
-        if [ $input -ge 1 -a $input -le 8 ] 2>/dev/null; then
+        if [ $input -ge 1 -a $input -le 9 ] 2>/dev/null; then
             case "$input" in
             1)
                 _all_echo
@@ -412,6 +416,10 @@ Advanced() {
             8)
                 _all_version
                 ;;
+            9)
+                _all_cors
+                ;;
+
             esac
 
         elif [ "$input" == "q" ] 2>/dev/null; then
@@ -758,6 +766,9 @@ Process_request() {
     _version)
         prompt="VERSION(v)"
         ;;
+    _cors)
+        prompt="CORS(c)"
+        ;;
     _detect)
         prompt="DETECT(d)"
         ;;
@@ -1004,6 +1015,68 @@ _all_version() {
         fi
     done
     echo
+    echo
+}
+
+_cors() {
+    cors_response=""
+    cors_elapsed=0
+    cors_retval=0
+    input="$1"
+    raida="raida$input"
+    raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/version"
+    start_s=$(Timer)
+    http_response=$($CURL_CMD $CURL_OPT -H "Origin: http://example.com" -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: X-Requested-With" -X OPTIONS $raida_url 2>&1)
+    http_retval=$?
+    end_s=$(Timer)
+    elapsed=$(((end_s - start_s) / 1000000))
+
+    if [ $http_retval -eq 0 ]; then
+        status="pass"
+    else
+        status="error"
+    fi
+
+    if [ "$status" = "pass" ]; then
+        status_color="$_GREEN_$status$_REST_"
+    else
+        status_color="$_RED_$status$_REST_"
+        cors_retval=1
+    fi
+
+    echo
+    echo -e "Status: $_BOLD_$status_color"
+    echo "Milliseconds: $elapsed"
+    if [ "$status" = "error" ]; then
+        echo -e "Response: $_RED_$http_response$_REST_"
+        echo "Details: This error would cause a few problems with the ATM and CCE Bridge."
+        echo "         To solve this error, you can visit https://enable-cors.org/server_nginx.html."
+    fi
+    echo
+
+    cors_response=$http_response
+    return $cors_retval
+
+}
+
+_all_cors() {
+    local n
+    echo "CORS Test: "
+    for ((n = 0; n < $RAIDA_NUMS; n++)); do
+        _cors $n >/dev/null 2>&1
+        run_cors=$?
+        if [ $run_cors -eq 0 ]; then
+            result="PASS"
+        else
+            result="${_RED_}FAIL${_REST_}"
+        fi
+
+        Output $n "CORS: $result"
+
+        if [ "$result" != "PASS" ]; then
+            Output2 "$cors_response"
+        fi
+    done
     echo
 }
 
