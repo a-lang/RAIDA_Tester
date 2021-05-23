@@ -17,7 +17,7 @@
 #set -e
 
 # Variables
-VERSION="210522"
+VERSION="210523"
 TESTCOINFILE1="testcoin.stack"
 TESTCOINFILE2="testcoin_multi.stack"
 TESTCOINFILE3="testcoin_multi2.stack"
@@ -1026,7 +1026,7 @@ _cors() {
     raida="raida$input"
     raida_url="$(ToLower ${HTTP_PROTO})://$raida.cloudcoin.global/service/version"
     start_s=$(Timer)
-    http_response=$($CURL_CMD $CURL_OPT -H "Origin: http://example.com" -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: X-Requested-With" -X OPTIONS $raida_url 2>&1)
+    http_response=$($CURL_CMD $CURL_OPT --head $raida_url | grep "^[Aa]ccess-[Cc]ontrol-[Aa]llow-" 2>&1)
     http_retval=$?
     end_s=$(Timer)
     elapsed=$(((end_s - start_s) / 1000000))
@@ -1039,18 +1039,21 @@ _cors() {
 
     if [ "$status" = "pass" ]; then
         status_color="$_GREEN_$status$_REST_"
+        response_color="$_GREEN_$http_response$_REST_"
     else
         status_color="$_RED_$status$_REST_"
+        response_color="$_RED_$http_response$_REST_"
         cors_retval=1
     fi
 
     echo
     echo -e "Status: $_BOLD_$status_color"
     echo "Milliseconds: $elapsed"
-    if [ "$status" = "error" ]; then
-        echo -e "Response: $_RED_$http_response$_REST_"
-        echo "Details: This error would cause a few problems with the ATM and CCE Bridge."
-        echo "         To solve this error, you can visit https://enable-cors.org/server_nginx.html."
+    if [ "$status" = "pass" ]; then
+        echo -e "Response: $response_color"
+    else
+        echo "Recommand: This error would cause a few problems with the ATM and CCE Bridge."
+        echo "           To solve this error, you can visit https://enable-cors.org/server_nginx.html."
     fi
     echo
 
@@ -1066,15 +1069,19 @@ _all_cors() {
         _cors $n >/dev/null 2>&1
         run_cors=$?
         if [ $run_cors -eq 0 ]; then
-            result="PASS"
+            result="pass"
         else
-            result="${_RED_}FAIL${_REST_}"
+            result="${_RED_}fail${_REST_}"
         fi
 
         Output $n "CORS: $result"
 
-        if [ "$result" != "PASS" ]; then
-            Output2 "$cors_response"
+        if [ "$result" != "pass" ]; then
+            if [ -z "$cors_response" ]; then
+                Output2 "Recommend: run the CORS Test to the node"
+            else
+                Output2 "$cors_response"
+            fi
         fi
     done
     echo
